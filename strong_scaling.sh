@@ -21,11 +21,8 @@ make
 # Strong scaling test (fixed problem size: 1024 4)
 echo "Starting Strong Scaling Tests..."
 
-# Array of process counts to test
-processes=(1 2 4 8 16 32 64 96)
-
-# Run tests for each process count
-for n in "${processes[@]}"
+# Run tests for each process count (1er-Schritte von 1 bis 96)
+for n in {1..96}
 do
     echo "Running test with $n processes..."
     

@@ -5,8 +5,8 @@ import matplotlib.pyplot as plt
 workers = np.array([1, 4, 8, 16, 32, 64, 96])
 times_max = np.array([10.8437, 11.4552, 6.12348, 12.3622, 9.65286, 12.4096, 10.4546])
 
-# --- Measured Speedup ---
-speedup_measured = times_max[0] / times_max
+# --- Measured Speedup (times_max[0] * workers) ---
+speedup_measured = (times_max[0] * workers) / times_max
 
 # --- Theoretical Speedups (Gustafson's Law) for different serial fractions ---
 serial_fractions = [0.1, 0.2, 0.5]
