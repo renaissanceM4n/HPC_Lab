@@ -1,0 +1,399 @@
+rm -f main.o raytracer.o scene.o snowman
+mpic++ -O3 -std=c++17  -c main.cpp -o main.o
+mpic++ -O3 -std=c++17  -c raytracer.cpp -o raytracer.o
+mpic++ -O3 -std=c++17  -c scene.cpp -o scene.o
+mpic++ -O3 -std=c++17  -o snowman main.o raytracer.o scene.o
+Starting Strong Scaling Tests...
+Running test with 48 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 48
+Max Local Computation Time (across all ranks): 14.6855 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 14.2316 seconds
+Running test with 49 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 49
+Max Local Computation Time (across all ranks): 14.6083 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 13.9163 seconds
+Running test with 50 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 50
+Max Local Computation Time (across all ranks): 14.0326 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 13.64 seconds
+Running test with 51 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 51
+Max Local Computation Time (across all ranks): 13.9616 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 13.368 seconds
+Running test with 52 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 52
+Max Local Computation Time (across all ranks): 13.8534 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 13.1203 seconds
+Running test with 53 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 53
+Max Local Computation Time (across all ranks): 13.3442 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 12.8814 seconds
+Running test with 54 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 54
+Max Local Computation Time (across all ranks): 13.2766 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 12.6339 seconds
+Running test with 55 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 55
+Max Local Computation Time (across all ranks): 12.7362 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 12.4177 seconds
+Running test with 56 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 56
+Max Local Computation Time (across all ranks): 12.666 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 12.1957 seconds
+Running test with 57 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 57
+Max Local Computation Time (across all ranks): 12.6196 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 11.9762 seconds
+Running test with 58 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 58
+Max Local Computation Time (across all ranks): 12.0384 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 11.7649 seconds
+Running test with 59 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 59
+Max Local Computation Time (across all ranks): 12.0042 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 11.5789 seconds
+Running test with 60 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 60
+Max Local Computation Time (across all ranks): 11.9583 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 11.3824 seconds
+Running test with 61 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 61
+Max Local Computation Time (across all ranks): 11.8949 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 11.1965 seconds
+Running test with 62 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 62
+Max Local Computation Time (across all ranks): 11.3536 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 11.0105 seconds
+Running test with 63 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 63
+Max Local Computation Time (across all ranks): 11.3212 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 10.8332 seconds
+Running test with 64 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 64
+Max Local Computation Time (across all ranks): 11.2706 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 10.67 seconds
+Running test with 65 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 65
+Max Local Computation Time (across all ranks): 10.7318 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 10.5117 seconds
+Running test with 66 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 66
+Max Local Computation Time (across all ranks): 10.67 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 10.3396 seconds
+Running test with 67 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 67
+Max Local Computation Time (across all ranks): 10.6457 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 10.1962 seconds
+Running test with 68 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 68
+Max Local Computation Time (across all ranks): 10.6304 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 10.0361 seconds
+Running test with 69 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 69
+Max Local Computation Time (across all ranks): 10.5734 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 9.89709 seconds
+Running test with 70 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 70
+Max Local Computation Time (across all ranks): 10.0241 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 9.74992 seconds
+Running test with 71 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 71
+Max Local Computation Time (across all ranks): 10.0136 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 9.60491 seconds
+Running test with 72 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 72
+Max Local Computation Time (across all ranks): 9.97414 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 9.49495 seconds
+Running test with 73 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 73
+Max Local Computation Time (across all ranks): 9.94478 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 9.35812 seconds
+Running test with 74 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 74
+Max Local Computation Time (across all ranks): 9.78926 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 9.21965 seconds
+Running test with 75 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 75
+Max Local Computation Time (across all ranks): 9.35548 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 9.10811 seconds
+Running test with 76 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 76
+Max Local Computation Time (across all ranks): 9.32996 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 8.97784 seconds
+Running test with 77 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 77
+Max Local Computation Time (across all ranks): 9.31313 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 8.86935 seconds
+Running test with 78 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 78
+Max Local Computation Time (across all ranks): 9.29399 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 8.76028 seconds
+Running test with 79 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 79
+Max Local Computation Time (across all ranks): 9.2606 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 8.64488 seconds
+Running test with 80 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 80
+Max Local Computation Time (across all ranks): 8.69861 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 8.53775 seconds
+Running test with 81 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 81
+Max Local Computation Time (across all ranks): 8.68413 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 8.42149 seconds
+Running test with 82 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 82
+Max Local Computation Time (across all ranks): 8.6653 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 8.32281 seconds
+Running test with 83 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 83
+Max Local Computation Time (across all ranks): 8.64241 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 8.21193 seconds
+Running test with 84 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 84
+Max Local Computation Time (across all ranks): 8.62214 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 8.13037 seconds
+Running test with 85 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 85
+Max Local Computation Time (across all ranks): 8.59913 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 8.03144 seconds
+Running test with 86 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 86
+Max Local Computation Time (across all ranks): 8.58141 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 7.94695 seconds
+Running test with 87 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 87
+Max Local Computation Time (across all ranks): 8.02107 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 7.84103 seconds
+Running test with 88 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 88
+Max Local Computation Time (across all ranks): 8.02079 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 7.76319 seconds
+Running test with 89 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 89
+Max Local Computation Time (across all ranks): 7.99918 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 7.67876 seconds
+Running test with 90 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 90
+Max Local Computation Time (across all ranks): 7.98262 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 7.59323 seconds
+Running test with 91 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 91
+Max Local Computation Time (across all ranks): 7.98167 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 7.51574 seconds
+Running test with 92 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 92
+Max Local Computation Time (across all ranks): 7.97371 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 7.45067 seconds
+Running test with 93 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 93
+Max Local Computation Time (across all ranks): 7.95249 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 7.3629 seconds
+Running test with 94 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 94
+Max Local Computation Time (across all ranks): 7.87623 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 7.26765 seconds
+Running test with 95 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 95
+Max Local Computation Time (across all ranks): 7.36741 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 7.18953 seconds
+Running test with 96 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 96
+Max Local Computation Time (across all ranks): 7.34051 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 7.10879 seconds
+Strong scaling tests completed.
