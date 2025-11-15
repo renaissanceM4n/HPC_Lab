@@ -1,0 +1,189 @@
+
+real	11m30.801s
+user	11m24.379s
+sys	0m2.893s
+
+real	6m2.901s
+user	11m58.371s
+sys	0m3.196s
+
+real	4m3.113s
+user	11m45.833s
+sys	0m1.386s
+
+real	3m4.108s
+user	12m10.450s
+sys	0m1.373s
+
+real	2m35.033s
+user	12m46.889s
+sys	0m1.647s
+
+real	2m11.098s
+user	12m44.955s
+sys	0m2.972s
+
+real	1m51.044s
+user	12m28.099s
+sys	0m2.678s
+
+real	1m39.351s
+user	12m49.693s
+sys	0m3.653s
+
+real	1m28.272s
+user	12m51.645s
+sys	0m2.528s
+
+real	1m19.627s
+user	12m55.622s
+sys	0m2.882s
+
+real	1m12.561s
+user	12m57.801s
+sys	0m3.241s
+
+real	1m7.127s
+user	12m43.683s
+sys	0m3.742s
+
+real	1m1.969s
+user	12m34.851s
+sys	0m4.209s
+
+real	0m57.866s
+user	12m23.941s
+sys	0m4.526s
+
+real	0m54.193s
+user	12m20.823s
+sys	0m5.177s
+
+real	0m51.333s
+user	12m19.503s
+sys	0m5.953s
+
+real	0m48.187s
+user	12m18.263s
+sys	0m6.015s
+
+real	0m47.002s
+user	12m34.154s
+sys	0m6.514s
+
+real	0m45.468s
+user	12m39.695s
+sys	0m7.311s
+
+real	0m41.344s
+user	12m22.509s
+sys	0m7.913s
+
+real	0m41.948s
+user	12m43.102s
+sys	0m8.724s
+
+real	0m38.026s
+user	12m35.600s
+sys	0m9.316s
+
+real	0m36.449s
+user	12m36.949s
+sys	0m9.041s
+
+real	0m37.921s
+user	12m48.948s
+sys	0m9.758s
+
+real	0m41.785s
+user	13m11.147s
+sys	0m9.813s
+
+real	0m32.273s
+user	12m32.887s
+sys	0m10.627s
+
+real	0m40.604s
+user	13m11.899s
+sys	0m11.470s
+
+real	0m34.322s
+user	12m46.546s
+sys	0m12.094s
+
+real	0m29.329s
+user	12m27.497s
+sys	0m11.754s
+
+real	0m28.658s
+user	12m26.296s
+sys	0m12.501s
+
+real	0m27.712s
+user	12m24.853s
+sys	0m10.358s
+
+real	0m27.214s
+user	11m36.727s
+sys	0m17.178s
+
+real	0m26.478s
+user	11m36.937s
+sys	0m16.669s
+
+real	0m25.774s
+user	11m38.154s
+sys	0m17.561s
+
+real	0m25.906s
+user	11m41.390s
+sys	0m18.585s
+
+real	0m29.529s
+user	11m59.368s
+sys	0m18.564s
+
+real	0m34.485s
+user	12m0.616s
+sys	0m19.707s
+
+real	0m41.190s
+user	12m38.796s
+sys	0m20.949s
+
+real	0m24.699s
+user	11m44.864s
+sys	0m22.850s
+
+real	0m33.047s
+user	12m26.646s
+sys	0m24.310s
+
+real	0m42.375s
+user	12m19.940s
+sys	0m28.136s
+
+real	0m27.248s
+user	11m54.245s
+sys	0m28.409s
+
+real	0m38.820s
+user	12m34.275s
+sys	0m29.791s
+
+real	0m24.383s
+user	11m53.352s
+sys	0m32.372s
+
+real	0m37.577s
+user	12m32.255s
+sys	0m33.195s
+
+real	0m23.716s
+user	11m52.981s
+sys	0m35.113s
+
+real	0m39.130s
+user	13m0.368s
+sys	0m37.029s
+[2025-11-15T10:41:55.003] error: *** JOB 23900286 ON node140 CANCELLED AT 2025-11-15T10:41:55 DUE TO TIME LIMIT ***
