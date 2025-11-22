@@ -6,7 +6,7 @@
 #SBATCH --cpus-per-task=1                 
 #SBATCH --output=tile_benchmark_%j.out    
 #SBATCH --error=tile_benchmark_%j.err     
-#SBATCH --time=02:00:00                   
+#SBATCH --time=01:00:00                   
 #SBATCH --partition=intelsr_devel
 #SBATCH --exclusive 
 

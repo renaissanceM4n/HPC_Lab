@@ -1,0 +1,979 @@
+rm -f main.o raytracer.o scene.o snowman
+mpic++ -O3 -std=c++17  -c main.cpp -o main.o
+mpic++ -O3 -std=c++17  -c raytracer.cpp -o raytracer.o
+mpic++ -O3 -std=c++17  -c scene.cpp -o scene.o
+mpic++ -O3 -std=c++17  -o snowman main.o raytracer.o scene.o
+Starting Tile Size Benchmark Tests...
+
+=== Testing Tile Size: 8x8 ===
+Running test with tile size 8x8 at 20 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 20
+Max Local Computation Time (across all ranks): 38.3702 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 36.4354 seconds
+Running test with tile size 8x8 at 24 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 24
+Max Local Computation Time (across all ranks): 31.695 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 30.356 seconds
+Running test with tile size 8x8 at 28 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 28
+Max Local Computation Time (across all ranks): 26.9892 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 26.008 seconds
+Running test with tile size 8x8 at 32 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 32
+Max Local Computation Time (across all ranks): 23.5333 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 22.7811 seconds
+Running test with tile size 8x8 at 36 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 36
+Max Local Computation Time (across all ranks): 20.8485 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 20.2539 seconds
+Running test with tile size 8x8 at 40 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 40
+Max Local Computation Time (across all ranks): 18.7231 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 18.2352 seconds
+Running test with tile size 8x8 at 44 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 44
+Max Local Computation Time (across all ranks): 16.9622 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 16.5575 seconds
+Running test with tile size 8x8 at 48 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 48
+Max Local Computation Time (across all ranks): 15.5182 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 15.1767 seconds
+Running test with tile size 8x8 at 52 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 52
+Max Local Computation Time (across all ranks): 14.3091 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 14.0159 seconds
+Running test with tile size 8x8 at 56 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 56
+Max Local Computation Time (across all ranks): 13.2815 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 13.0234 seconds
+Running test with tile size 8x8 at 60 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 60
+Max Local Computation Time (across all ranks): 12.3823 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 12.1578 seconds
+Running test with tile size 8x8 at 64 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 64
+Max Local Computation Time (across all ranks): 11.6135 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 11.4138 seconds
+Running test with tile size 8x8 at 68 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 68
+Max Local Computation Time (across all ranks): 10.9478 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 10.7567 seconds
+Running test with tile size 8x8 at 72 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 72
+Max Local Computation Time (across all ranks): 10.3374 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 10.152 seconds
+Running test with tile size 8x8 at 76 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 76
+Max Local Computation Time (across all ranks): 9.80619 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 9.63012 seconds
+Running test with tile size 8x8 at 80 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 80
+Max Local Computation Time (across all ranks): 9.29051 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 9.14628 seconds
+Running test with tile size 8x8 at 84 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 84
+Max Local Computation Time (across all ranks): 8.9309 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 8.78983 seconds
+Running test with tile size 8x8 at 88 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 88
+Max Local Computation Time (across all ranks): 8.45831 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 8.32298 seconds
+Running test with tile size 8x8 at 92 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 92
+Max Local Computation Time (across all ranks): 8.22963 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 8.09839 seconds
+Running test with tile size 8x8 at 96 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 96
+Max Local Computation Time (across all ranks): 7.77566 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 7.66172 seconds
+
+=== Testing Tile Size: 16x16 ===
+Running test with tile size 16x16 at 20 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 20
+Max Local Computation Time (across all ranks): 36.3463 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 34.452 seconds
+Running test with tile size 16x16 at 24 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 24
+Max Local Computation Time (across all ranks): 30.0535 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 28.73 seconds
+Running test with tile size 16x16 at 28 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 28
+Max Local Computation Time (across all ranks): 25.5929 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 24.616 seconds
+Running test with tile size 16x16 at 32 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 32
+Max Local Computation Time (across all ranks): 22.356 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 21.5598 seconds
+Running test with tile size 16x16 at 36 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 36
+Max Local Computation Time (across all ranks): 19.7913 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 19.1616 seconds
+Running test with tile size 16x16 at 40 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 40
+Max Local Computation Time (across all ranks): 17.7342 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 17.2324 seconds
+Running test with tile size 16x16 at 44 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 44
+Max Local Computation Time (across all ranks): 16.1313 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 15.6659 seconds
+Running test with tile size 16x16 at 48 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 48
+Max Local Computation Time (across all ranks): 14.7785 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 14.3798 seconds
+Running test with tile size 16x16 at 52 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 52
+Max Local Computation Time (across all ranks): 13.623 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 13.2671 seconds
+Running test with tile size 16x16 at 56 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 56
+Max Local Computation Time (across all ranks): 12.6284 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 12.3103 seconds
+Running test with tile size 16x16 at 60 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 60
+Max Local Computation Time (across all ranks): 11.7811 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 11.502 seconds
+Running test with tile size 16x16 at 64 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 64
+Max Local Computation Time (across all ranks): 11.0436 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 10.7895 seconds
+Running test with tile size 16x16 at 68 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 68
+Max Local Computation Time (across all ranks): 10.417 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 10.1637 seconds
+Running test with tile size 16x16 at 72 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 72
+Max Local Computation Time (across all ranks): 9.80307 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 9.59293 seconds
+Running test with tile size 16x16 at 76 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 76
+Max Local Computation Time (across all ranks): 9.30154 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 9.08999 seconds
+Running test with tile size 16x16 at 80 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 80
+Max Local Computation Time (across all ranks): 8.79127 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 8.63104 seconds
+Running test with tile size 16x16 at 84 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 84
+Max Local Computation Time (across all ranks): 8.4551 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 8.28731 seconds
+Running test with tile size 16x16 at 88 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 88
+Max Local Computation Time (across all ranks): 8.06413 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 7.86192 seconds
+Running test with tile size 16x16 at 92 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 92
+Max Local Computation Time (across all ranks): 7.83073 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 7.66014 seconds
+Running test with tile size 16x16 at 96 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 96
+Max Local Computation Time (across all ranks): 7.50611 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 7.35265 seconds
+
+=== Testing Tile Size: 32x32 ===
+Running test with tile size 32x32 at 20 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 20
+Max Local Computation Time (across all ranks): 35.8895 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 33.9602 seconds
+Running test with tile size 32x32 at 24 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 24
+Max Local Computation Time (across all ranks): 29.852 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 28.3182 seconds
+Running test with tile size 32x32 at 28 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 28
+Max Local Computation Time (across all ranks): 25.284 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 24.2722 seconds
+Running test with tile size 32x32 at 32 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 32
+Max Local Computation Time (across all ranks): 22.3563 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 21.2259 seconds
+Running test with tile size 32x32 at 36 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 36
+Max Local Computation Time (across all ranks): 19.7922 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 18.8774 seconds
+Running test with tile size 32x32 at 40 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 40
+Max Local Computation Time (across all ranks): 17.8596 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 17.0026 seconds
+Running test with tile size 32x32 at 44 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 44
+Max Local Computation Time (across all ranks): 15.9406 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 15.4324 seconds
+Running test with tile size 32x32 at 48 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 48
+Max Local Computation Time (across all ranks): 14.6193 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 14.1592 seconds
+Running test with tile size 32x32 at 52 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 52
+Max Local Computation Time (across all ranks): 13.7825 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 13.0523 seconds
+Running test with tile size 32x32 at 56 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 56
+Max Local Computation Time (across all ranks): 12.6059 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 12.1356 seconds
+Running test with tile size 32x32 at 60 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 60
+Max Local Computation Time (across all ranks): 11.9184 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 11.332 seconds
+Running test with tile size 32x32 at 64 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 64
+Max Local Computation Time (across all ranks): 11.2149 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 10.6167 seconds
+Running test with tile size 32x32 at 68 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 68
+Max Local Computation Time (across all ranks): 10.5783 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 9.98912 seconds
+Running test with tile size 32x32 at 72 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 72
+Max Local Computation Time (across all ranks): 9.92231 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 9.43886 seconds
+Running test with tile size 32x32 at 76 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 76
+Max Local Computation Time (across all ranks): 9.30194 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 8.95299 seconds
+Running test with tile size 32x32 at 80 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 80
+Max Local Computation Time (across all ranks): 8.66476 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 8.50183 seconds
+Running test with tile size 32x32 at 84 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 84
+Max Local Computation Time (across all ranks): 8.61642 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 8.13398 seconds
+Running test with tile size 32x32 at 88 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 88
+Max Local Computation Time (across all ranks): 7.98536 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 7.73658 seconds
+Running test with tile size 32x32 at 92 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 92
+Max Local Computation Time (across all ranks): 7.94 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 7.55504 seconds
+Running test with tile size 32x32 at 96 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 96
+Max Local Computation Time (across all ranks): 7.50668 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 7.22475 seconds
+
+=== Testing Tile Size: 48x48 ===
+Running test with tile size 48x48 at 20 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 20
+Max Local Computation Time (across all ranks): 35.7885 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 33.8573 seconds
+Running test with tile size 48x48 at 24 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 24
+Max Local Computation Time (across all ranks): 29.962 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 28.2851 seconds
+Running test with tile size 48x48 at 28 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 28
+Max Local Computation Time (across all ranks): 25.4029 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 24.2197 seconds
+Running test with tile size 48x48 at 32 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 32
+Max Local Computation Time (across all ranks): 22.3551 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 21.1973 seconds
+Running test with tile size 48x48 at 36 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 36
+Max Local Computation Time (across all ranks): 19.7658 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 18.8534 seconds
+Running test with tile size 48x48 at 40 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 40
+Max Local Computation Time (across all ranks): 17.8687 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 16.9395 seconds
+Running test with tile size 48x48 at 44 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 44
+Max Local Computation Time (across all ranks): 16.3696 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 15.4052 seconds
+Running test with tile size 48x48 at 48 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 48
+Max Local Computation Time (across all ranks): 14.9305 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 14.1391 seconds
+Running test with tile size 48x48 at 52 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 52
+Max Local Computation Time (across all ranks): 13.4885 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 13.0391 seconds
+Running test with tile size 48x48 at 56 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 56
+Max Local Computation Time (across all ranks): 13.2359 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 12.1102 seconds
+Running test with tile size 48x48 at 60 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 60
+Max Local Computation Time (across all ranks): 11.9299 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 11.3076 seconds
+Running test with tile size 48x48 at 64 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 64
+Max Local Computation Time (across all ranks): 10.9654 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 10.6045 seconds
+Running test with tile size 48x48 at 68 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 68
+Max Local Computation Time (across all ranks): 10.4783 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 9.97973 seconds
+Running test with tile size 48x48 at 72 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 72
+Max Local Computation Time (across all ranks): 10.3616 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 9.43209 seconds
+Running test with tile size 48x48 at 76 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 76
+Max Local Computation Time (across all ranks): 9.39112 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 8.93399 seconds
+Running test with tile size 48x48 at 80 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 80
+Max Local Computation Time (across all ranks): 8.9847 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 8.4894 seconds
+Running test with tile size 48x48 at 84 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 84
+Max Local Computation Time (across all ranks): 8.93708 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 8.14244 seconds
+Running test with tile size 48x48 at 88 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 88
+Max Local Computation Time (across all ranks): 8.83582 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 7.72473 seconds
+Running test with tile size 48x48 at 92 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 92
+Max Local Computation Time (across all ranks): 7.92777 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 7.50226 seconds
+Running test with tile size 48x48 at 96 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 96
+Max Local Computation Time (across all ranks): 7.67978 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 7.23887 seconds
+
+=== Testing Tile Size: 64x64 ===
+Running test with tile size 64x64 at 20 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 20
+Max Local Computation Time (across all ranks): 37.0614 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 33.8779 seconds
+Running test with tile size 64x64 at 24 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 24
+Max Local Computation Time (across all ranks): 31.4504 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 28.2036 seconds
+Running test with tile size 64x64 at 28 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 28
+Max Local Computation Time (across all ranks): 26.4094 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 24.2208 seconds
+Running test with tile size 64x64 at 32 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 32
+Max Local Computation Time (across all ranks): 23.6632 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 21.1807 seconds
+Running test with tile size 64x64 at 36 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 36
+Max Local Computation Time (across all ranks): 21.022 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 18.8266 seconds
+Running test with tile size 64x64 at 40 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 40
+Max Local Computation Time (across all ranks): 18.4822 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 16.9502 seconds
+Running test with tile size 64x64 at 44 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 44
+Max Local Computation Time (across all ranks): 15.9812 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 15.3983 seconds
+Running test with tile size 64x64 at 48 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 48
+Max Local Computation Time (across all ranks): 15.778 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 14.1135 seconds
+Running test with tile size 64x64 at 52 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 52
+Max Local Computation Time (across all ranks): 15.1431 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 13.0231 seconds
+Running test with tile size 64x64 at 56 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 56
+Max Local Computation Time (across all ranks): 13.2901 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 12.11 seconds
+Running test with tile size 64x64 at 60 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 60
+Max Local Computation Time (across all ranks): 13.1494 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 11.2941 seconds
+Running test with tile size 64x64 at 64 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 64
+Max Local Computation Time (across all ranks): 12.9365 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 10.6013 seconds
+Running test with tile size 64x64 at 68 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 68
+Max Local Computation Time (across all ranks): 10.6983 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 9.98335 seconds
+Running test with tile size 64x64 at 72 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 72
+Max Local Computation Time (across all ranks): 10.6162 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 9.42068 seconds
+Running test with tile size 64x64 at 76 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 76
+Max Local Computation Time (across all ranks): 10.5791 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 8.92723 seconds
+Running test with tile size 64x64 at 80 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 80
+Max Local Computation Time (across all ranks): 10.5054 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 8.48718 seconds
+Running test with tile size 64x64 at 84 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 84
+Max Local Computation Time (across all ranks): 10.3463 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 8.12808 seconds
+Running test with tile size 64x64 at 88 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 88
+Max Local Computation Time (across all ranks): 8.08484 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 7.70944 seconds
+Running test with tile size 64x64 at 92 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 92
+Max Local Computation Time (across all ranks): 8.19938 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 7.47619 seconds
+Running test with tile size 64x64 at 96 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 96
+Max Local Computation Time (across all ranks): 8.00483 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 7.08553 seconds
+
+=== Testing Tile Size: 128x128 ===
+Running test with tile size 128x128 at 20 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 20
+Max Local Computation Time (across all ranks): 41.9599 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 33.8997 seconds
+Running test with tile size 128x128 at 24 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 24
+Max Local Computation Time (across all ranks): 32.1902 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 28.2092 seconds
+Running test with tile size 128x128 at 28 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 28
+Max Local Computation Time (across all ranks): 31.3281 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 24.2307 seconds
+Running test with tile size 128x128 at 32 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 32
+Max Local Computation Time (across all ranks): 30.1967 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 21.2011 seconds
+Running test with tile size 128x128 at 36 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 36
+Max Local Computation Time (across all ranks): 22.3358 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 18.8244 seconds
+Running test with tile size 128x128 at 40 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 40
+Max Local Computation Time (across all ranks): 22.3333 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 16.9529 seconds
+Running test with tile size 128x128 at 44 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 44
+Max Local Computation Time (across all ranks): 22.2271 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 15.4247 seconds
+Running test with tile size 128x128 at 48 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 48
+Max Local Computation Time (across all ranks): 21.7225 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 14.1328 seconds
+Running test with tile size 128x128 at 52 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 52
+Max Local Computation Time (across all ranks): 21.6215 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 13.0547 seconds
+Running test with tile size 128x128 at 56 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 56
+Max Local Computation Time (across all ranks): 21.3718 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 12.1007 seconds
+Running test with tile size 128x128 at 60 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 60
+Max Local Computation Time (across all ranks): 19.9674 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 11.297 seconds
+Running test with tile size 128x128 at 64 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 64
+Max Local Computation Time (across all ranks): 19.8832 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 10.5876 seconds
+Running test with tile size 128x128 at 68 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 68
+Max Local Computation Time (across all ranks): 12.4058 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 9.96408 seconds
+Running test with tile size 128x128 at 72 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 72
+Max Local Computation Time (across all ranks): 12.4037 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 9.41434 seconds
+Running test with tile size 128x128 at 76 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 76
+Max Local Computation Time (across all ranks): 12.4061 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 8.91835 seconds
+Running test with tile size 128x128 at 80 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 80
+Max Local Computation Time (across all ranks): 12.4098 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 8.4781 seconds
+Running test with tile size 128x128 at 84 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 84
+Max Local Computation Time (across all ranks): 12.4096 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 8.07026 seconds
+Running test with tile size 128x128 at 88 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 88
+Max Local Computation Time (across all ranks): 12.4101 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 7.70409 seconds
+Running test with tile size 128x128 at 92 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 92
+Max Local Computation Time (across all ranks): 12.4031 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 7.36754 seconds
+Running test with tile size 128x128 at 96 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 96
+Max Local Computation Time (across all ranks): 12.4125 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 7.06078 seconds
+Tile size benchmark tests completed.
