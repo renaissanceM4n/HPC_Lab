@@ -18,16 +18,21 @@ module load OpenMPI/4.1.6-GCC-13.2.0
 make clean
 make
 
-# Tile size benchmark test (fixed problem size: 1024 4, varying tile sizes)
+# Tile size benchmark test (fixed problem size: 1024 4, varying tile sizes and process counts)
 echo "Starting Tile Size Benchmark Tests..."
 
-# Run tests for each tile size (32, 64, 128, 256) at 96 processes
+# Run tests for each tile size at process counts from 20 to 96
 for tile_size in 8 16 32 48 64 128
 do
     echo ""
-    echo "Running test with tile size ${tile_size}x${tile_size} at 96 processes..."
+    echo "=== Testing Tile Size: ${tile_size}x${tile_size} ==="
     
-    time mpirun -n 96 ./snowman 1024 4 $tile_size
+    for n in {20..96..4}
+    do
+        echo "Running test with tile size ${tile_size}x${tile_size} at $n processes..."
+        
+        time mpirun -n $n ./snowman 1024 4 $tile_size
+    done
 done
 
 echo "Tile size benchmark tests completed."
