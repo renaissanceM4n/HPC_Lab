@@ -30,7 +30,7 @@ int main(int argc, char* argv[]) {
 
     if (argc < 3) {
         if (rank == 0) {
-            std::cout << "Usage: " << argv[0] << " <image_size> <num_snowmen>\n";
+            std::cout << "Usage: " << argv[0] << " <image_size> <num_snowmen> <tile_size>\n";
         }
         MPI_Finalize();
         return 1;
@@ -38,6 +38,7 @@ int main(int argc, char* argv[]) {
 
     int image_size = std::stoi(argv[1]);
     int num_snowmen = std::stoi(argv[2]);
+    int tile_size = std::stoi(argv[3]);
 
     // Scene generation and RayTracer setup
     Scene scene;
@@ -62,7 +63,7 @@ int main(int argc, char* argv[]) {
         if (rank == 0) std::cout << "Image saved to output.ppm\n";
         local_compute_time = dur.count();
     } else {
-        const int TILE_SIZE = 32;
+        const int TILE_SIZE = tile_size;
         struct Tile { int id; int x0; int y0; int w; int h; };
 
         std::vector<Tile> tiles;
