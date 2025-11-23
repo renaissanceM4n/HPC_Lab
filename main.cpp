@@ -196,6 +196,10 @@ int main(int argc, char* argv[]) {
     MPI_Reduce(&local_compute_time, &min_local_compute_time, 1, MPI_DOUBLE, MPI_MIN, 0, MPI_COMM_WORLD);
     MPI_Reduce(&local_compute_time, &sum_local_compute_time, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
 
+    // Gather all local compute times to rank 0 for per-rank output
+    std::vector<double> all_local_compute_times(size);
+    MPI_Gather(&local_compute_time, 1, MPI_DOUBLE, all_local_compute_times.data(), 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+
     if (rank == 0) {
         double avg_local_compute_time = sum_local_compute_time / size;
         std::cout << "\n--- Computational Performance Metrics ---\n";
@@ -203,6 +207,11 @@ int main(int argc, char* argv[]) {
         std::cout << "Max Local Computation Time (across all ranks): " << max_local_compute_time << " seconds\n";
         std::cout << "Min Local Computation Time (across all ranks): " << min_local_compute_time << " seconds\n";
         std::cout << "Avg Local Computation Time (across all ranks): " << avg_local_compute_time << " seconds\n";
+        
+        std::cout << "\n--- Per-Rank Computation Time ---\n";
+        for (int i = 0; i < size; ++i) {
+            std::cout << "Rank " << i << ": " << all_local_compute_times[i] << " seconds\n";
+        }
     }
 
     MPI_Finalize();
