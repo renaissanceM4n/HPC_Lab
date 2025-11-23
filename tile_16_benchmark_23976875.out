@@ -1,0 +1,114 @@
+rm -f main.o raytracer.o scene.o snowman
+mpic++ -O3 -std=c++17  -c main.cpp -o main.o
+mpic++ -O3 -std=c++17  -c raytracer.cpp -o raytracer.o
+mpic++ -O3 -std=c++17  -c scene.cpp -o scene.o
+mpic++ -O3 -std=c++17  -o snowman main.o raytracer.o scene.o
+Starting Tile 16x16 Benchmark with 96 Processes...
+
+Running test with tile size 16x16 at 96 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 96
+Max Local Computation Time (across all ranks): 7.39828 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 7.22242 seconds
+
+--- Per-Rank Computation Time ---
+Rank 0: 0 seconds
+Rank 1: 7.30619 seconds
+Rank 2: 7.34873 seconds
+Rank 3: 7.29007 seconds
+Rank 4: 7.31902 seconds
+Rank 5: 7.31554 seconds
+Rank 6: 7.2521 seconds
+Rank 7: 7.30521 seconds
+Rank 8: 7.37228 seconds
+Rank 9: 7.3276 seconds
+Rank 10: 7.29459 seconds
+Rank 11: 7.28039 seconds
+Rank 12: 7.31053 seconds
+Rank 13: 7.29079 seconds
+Rank 14: 7.30491 seconds
+Rank 15: 7.28043 seconds
+Rank 16: 7.31653 seconds
+Rank 17: 7.29241 seconds
+Rank 18: 7.28978 seconds
+Rank 19: 7.30771 seconds
+Rank 20: 7.29814 seconds
+Rank 21: 7.2891 seconds
+Rank 22: 7.3539 seconds
+Rank 23: 7.28689 seconds
+Rank 24: 7.37269 seconds
+Rank 25: 7.28611 seconds
+Rank 26: 7.27877 seconds
+Rank 27: 7.29469 seconds
+Rank 28: 7.28975 seconds
+Rank 29: 7.30262 seconds
+Rank 30: 7.27264 seconds
+Rank 31: 7.26117 seconds
+Rank 32: 7.29219 seconds
+Rank 33: 7.25914 seconds
+Rank 34: 7.39828 seconds
+Rank 35: 7.27732 seconds
+Rank 36: 7.26441 seconds
+Rank 37: 7.28868 seconds
+Rank 38: 7.27024 seconds
+Rank 39: 7.29233 seconds
+Rank 40: 7.37331 seconds
+Rank 41: 7.32159 seconds
+Rank 42: 7.35911 seconds
+Rank 43: 7.29914 seconds
+Rank 44: 7.289 seconds
+Rank 45: 7.30121 seconds
+Rank 46: 7.28479 seconds
+Rank 47: 7.29662 seconds
+Rank 48: 7.28805 seconds
+Rank 49: 7.28474 seconds
+Rank 50: 7.29141 seconds
+Rank 51: 7.28936 seconds
+Rank 52: 7.38904 seconds
+Rank 53: 7.30146 seconds
+Rank 54: 7.27493 seconds
+Rank 55: 7.30105 seconds
+Rank 56: 7.27363 seconds
+Rank 57: 7.26711 seconds
+Rank 58: 7.37034 seconds
+Rank 59: 7.27155 seconds
+Rank 60: 7.28518 seconds
+Rank 61: 7.28987 seconds
+Rank 62: 7.29452 seconds
+Rank 63: 7.31683 seconds
+Rank 64: 7.29048 seconds
+Rank 65: 7.29016 seconds
+Rank 66: 7.28467 seconds
+Rank 67: 7.28249 seconds
+Rank 68: 7.2461 seconds
+Rank 69: 7.29415 seconds
+Rank 70: 7.28217 seconds
+Rank 71: 7.27652 seconds
+Rank 72: 7.28833 seconds
+Rank 73: 7.26515 seconds
+Rank 74: 7.28797 seconds
+Rank 75: 7.27411 seconds
+Rank 76: 7.39289 seconds
+Rank 77: 7.30131 seconds
+Rank 78: 7.28214 seconds
+Rank 79: 7.29235 seconds
+Rank 80: 7.26142 seconds
+Rank 81: 7.28688 seconds
+Rank 82: 7.28855 seconds
+Rank 83: 7.2821 seconds
+Rank 84: 7.29746 seconds
+Rank 85: 7.38485 seconds
+Rank 86: 7.27831 seconds
+Rank 87: 7.29892 seconds
+Rank 88: 7.29248 seconds
+Rank 89: 7.28456 seconds
+Rank 90: 7.26655 seconds
+Rank 91: 7.26122 seconds
+Rank 92: 7.28651 seconds
+Rank 93: 7.29269 seconds
+Rank 94: 7.29687 seconds
+Rank 95: 7.31387 seconds
+Tile 16x16 benchmark test completed.
