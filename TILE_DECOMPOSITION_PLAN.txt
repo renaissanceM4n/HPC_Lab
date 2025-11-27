@@ -1,0 +1,190 @@
+Kontext
+
+Der `snowman`-Code (Raytracer) verwendet aktuell eine Linien-basierte Domain-Decomposition (jeder MPI-Rank berechnet einen Block zeilenweiser Pixel). Beobachtetes Verhalten:
+- Code ist nicht automatisch vektorisierbar (innerste Pixel-Schleifen enthalten Verzweigungen und Funktionsaufrufe wie `sqrt`).
+- MPI-Overhead / schlechte Skalierung wird nicht (hauptsächlich) durch Datenübertragung verursacht, sondern durch Lastungleichgewichte (einige Prozesse haben deutlich mehr Arbeit/teurere Pixel).
+- `main.cpp` und `raytracer.cpp` (statt `render.cpp`) sind die zentralen Dateien zur Anpassung.
+
+Ziel
+
+Vor der Einführung komplexer dynamischer Programmstrukturen oder adaptiver Algorithmen soll die Arbeitseinheit feiner und besser verteilbar werden: Tile Decomposition.
+Jedes Tile (quadratische Blockregion) ist eine atomare Arbeitseinheit; durch kleinere Einheiten lassen sich Lastungleichgewichte erheblich reduzieren und dynamisch ausgleichen.
+
+Vorteile der Tile-Decomposition
+
+- Bessere Lastverteilung: dynamische Zuweisung von Tiles reduziert Leerlauf bei ungleich teuren Pixeln.
+- Verbesserte Cache-Lokalität: kleine rechteckige Tiles können so gewählt werden, dass sie gut in L1/L2 passen.
+- Einfacherer Einsatz von Threading/SIMD innerhalb eines Ranks (OpenMP / TBB) pro Tile.
+- Kleinere, häufiger abgeschlossene Aufgaben erlauben Streaming der Ergebnisse (nicht zwingend vollständiges Gather aller Daten am Ende).
+
+Einschränkungen / Annahmen
+
+- Szene kann kopiert (repliziert) auf allen Ranks gehalten werden (meist kleiner als Bilddaten). Alternativ Broadcast für große Assets.
+- Tiles sind relativ unabhängig; Schneeflocken-Overlay benutzt RNG — Reproduzierbarkeit muss tile-basiert sichergestellt werden (Seed pro Tile).
+- Kommunikation (Result-Transfer) kann inkrementell erfolgen (MPI_Send / MPI_Gatherv pro fertiges Tile oder Master/Worker protocol).
+
+Konkrete Implementierungsstrategie (Schritt für Schritt)
+
+1) Datenstruktur: Tile-Definition
+- Definiere eine kleine Struktur `struct Tile { int x0, y0, w, h; int id; };`.
+- Tile-Koordinaten bilden ein regelmäßiges Gitter über das Bild (z.B. TileSize x TileSize). Letztes Tile in Reihe/Spalte kann kleiner sein.
+
+2) Tile-Größe wählen
+- Empfohlenes Anfangs-Tile: 16x16 oder 32x32. Granularität testen (16 / 32 / 64).
+- Beachte Cache: 16x16x3 Bytes ≈ 768 B pro Tile (pixels), plus Rechendaten — gut für L1/L2.
+- Kleinere Tiles → bessere Balance, aber höherer Scheduling-Overhead; find sweet-spot per Messung.
+
+3) Master/Worker Scheduling (MPI)
+- Master (Rank 0) erzeugt Liste aller Tiles (IDs, Koordinaten).
+- Worker fordert per `MPI_Recv`/`MPI_Send` oder non-blocking `MPI_Irecv` eine neue Tile-ID an oder Master sendet Tile-IDs bei Verfügbarkeit.
+- Worker berechnet Tile (lokale `RayTracer::renderTile(tile, ...)`) und sendet Ergebnisse (RGB-Buf) an Master oder schreibt bei NFS/parallel I/O.
+- Master empfängt Tile-Resultate und schreibt sie in die globale Bildpuffer-Position (oder speichert direkt zu Datei, falls unterstützt).
+- Protocol: Worker sendet `MSG_REQUEST` -> Master antwortet mit `MSG_TILE` (Tile struct) oder `MSG_DONE` bei keine Tiles mehr. Nach Fertigstellung sendet Worker `MSG_RESULT` mit Daten.
+
+4) Alternative: Distributed Task Queue (work-stealing)
+- Wenn Master ein Bottleneck wird, kann man dezentrale Work-Stealing zwischen Ranks implementieren (höherer Implementationsaufwand).
+- Erste Version: Master/Worker ausreichend und einfacher.
+
+5) Multithreading innerhalb eines Ranks (Hybrid MPI+Threads)
+- Jeder MPI-Rank kann mehrere Threads nutzen (e.g. OpenMP parallel for über Pixel oder subtile inner loops) um Kerne pro Node auszulasten.
+- Empfehlung: Pro Rank je ein Worker-Thread, der tiles nacheinander verarbeitet; innerhalb `renderTile()` OpenMP parallelisiert über Zeilen/Pixel des Tiles oder nutzt vectorisierte math-Funktionen.
+
+6) RNG / Snowflake Reproducibility
+- Statt rng seeded mit `rank + 12345`, nutze einen seed, der von Tile-Koordinaten abhängt: `seed = base_seed ^ (tile_id * 10007)`.
+- So sind Schneeflocken-Berechnungen deterministisch pro Tile und unabhängig von Scheduling-Reihenfolge.
+
+7) Kommunikation: effizientes Ergebnis-Dispatch
+- Verwende `MPI_Send`/`MPI_Recv` für kleine/medium Tiles; aggregiere mehrere Tile-Results, wenn nötig, um Overhead zu senken.
+- Alternative: `MPI_Reduce_scatter_block` passt nicht für ungleichmäßige Tile-Größen.
+- Verwende `MPI_Gatherv` nur, wenn alle Ranks wissen, wo ihre finalen Offsets sind (bei statischer Zeilen-Aufteilung). Bei dynamischer Tile-Vergabe ist Master/Worker mit gezielten `MPI_Recv` die praktikablere Wahl.
+
+8) Speicherlayout & Vectorisierung
+- Pixel-Buffer: Verwende SoA (separate arrays für r,g,b) oder abgestimmtes, 16-Byte-aligned POD-Array um SIMD-Ladestride zu verbessern.
+- Innerste Pixel-Berechnung: Minimiere Verzweigungen innerhalb der Pixel-Loop. Z.B. if-else zum Ermitteln von `hit_sphere`/`hit_plane` ist nötig, aber man kann Teile in separate Funktionen extrahieren und Compiler-friendlier strukturieren.
+- Funktionsaufrufe (z.B. `std::sqrt`): wenn möglich durch approximative VectorMath Bibliothek ersetzen (z.B. use fast sqrt approximations for distant computations) oder rely on auto-vectorizing math intrinsics (Intel SVML / libmvec) by enabling compiler flags.
+- Compiler flags: `-O3 -march=native -ffast-math` testen (nur wenn numerical acceptance OK). Verwende pragmas: `#pragma GCC ivdep` or `#pragma omp simd` on loops where safe.
+
+9) Profiling & Instrumentation
+- Instrumentiere Tile-Render mit timings: Zeit pro Tile, per-rank sum/avg, number of tiles processed.
+- Sammle and log per-rank histograms of tile durations to quantify imbalance.
+- Nutze `MPI_Wtime()` für lightweight timings.
+
+10) Testing & Validation
+- Implement a correctness test rendering small image with fixed seed and compare checksum/MD5 of PPM header and data.
+- Run across 1..N ranks to verify reproducible output (tile order independent).
+
+Pseudo-Code: Master (Rank 0)
+
+- build tile list
+- next_tile_index = 0
+- for worker in 1..size-1: send initial tile (if any)
+- while next_tile_index < num_tiles:
+    recv result from any worker (MPI_Recv with MPI_ANY_SOURCE)
+    write result into `full_buf` at tile offset
+    send next tile to that worker
+- receive remaining results until all tiles accounted for
+- send `MSG_DONE` to all workers
+
+Pseudo-Code: Worker (rank > 0)
+
+while true:
+    send MSG_REQUEST to master
+    recv msg
+    if msg == MSG_DONE: break
+    if msg == MSG_TILE:
+        renderTile(tile)
+        send MSG_RESULT with tile.id and data
+
+Implementierungsdetails in `raytracer.cpp` / `raytracer.hpp`
+
+- Ergänze Methode `void RayTracer::renderTile(int x0, int y0, int w, int h, std::vector<Color>& out)` die exakt die Pixel dieses Tiles füllt.
+- Ändere `render(...)` so, dass sie entweder:
+  a) wie bisher alle Zeilen berechnet (für Vergleichsbasis), oder
+  b) nur als dispatcher fungiert (bei worker-side). Besser: implementiere `renderTile()` und lasse das MPI-Protokoll außerhalb (`main.cpp`) die Tile-Aufrufe koordinieren.
+
+Änderungen in `main.cpp`
+
+- Entkopple Bildaufbau vom render: `rank 0` initialisiert scene, broadcasts scene if necessary or use replicated initialization.
+- Implementiere Master/Worker protocol (siehe oben). Master baut finalen `full_buf` zusammen und schreibt PPM.
+- Timing: Messe Zeiten für Computation (pro Tile), Kommunikation, Gesamtzeit.
+
+Messbarkeit & Metriken
+
+- Per-tile compute time (histogram, mean, max, stdev)
+- Per-rank total compute time
+- Communication time per message
+- Idle time per rank (time spent waiting for new tile or waiting for sends)
+
+Risiken und Gegenmaßnahmen
+
+- Master wird Bottleneck: Falls Master zu busy wird, kann man:
+  - Pufferung/Batching von Ergebnissen (Worker sendet 4 Tiles in einem Paket)
+  - Mehrdeutiges Dezentrales Scheduling (Work-stealing)
+  - Hierarchisches Mastering: ein Master pro Node, globale Master pro Cluster
+- Reproducibility: RNG per Tile wie beschrieben
+- Overhead vs. Tile-Größe: Messungen zur Bestimmung eines guten Tile-Size Kompromisses
+
+Weitere Optimierungen, nachdem Tile-Decomposition läuft
+
+- Automatische/Forced Vectorization: reharmonize inner loops to enable auto-vectorisation; reduce function call overhead (inline, remove branches), restructure intersections for SIMD batch-ray intersections
+- Ray-packet / packet tracing: Trace groups of rays (e.g., 4 or 8) together for SIMD gains
+- Spatial data structures: BVH / acceleration structure for scene geometry (for many spheres this might pay off)
+- Use of platform-specific intrinsics (AVX2/AVX512) if portability is secondary
+- Memory layout tuning: align buffers, prefetching, locality-aware scheduling (tiles near each other assigned to same rank to reuse caches)
+
+Priorisierte To-Do-Liste (konkret zu implementieren)
+
+1. Implement `RayTracer::renderTile(...)` (atomic tile compute).  
+2. Implement Master/Worker protocol in `main.cpp` (tile list, requests, results).  
+3. Seed RNG per tile (deterministic per tile).  
+4. Add per-tile timing instrumentation and logging.  
+5. Run experiments to sweep TileSize (16, 32, 64) and measure imbalance + overhead.  
+6. If Master bottleneck auftaucht → implement batching or hierarchical masters.  
+7. After stable scheduling: restructure inner loops to be SIMD-friendly and test compiler vectorization reports.
+
+Empfohlene Mess-/Vergleichsexperimente
+
+- Vergleich alte vs neue Implementierung: gleiche `image_size` & `num_snowmen`, run 1..N ranks, plot `max_local_compute_time` und `stddev` der per-rank Zeiten.
+- TileSize Sweep: 16/32/64, fixe ranks=96, logs of tile-times histogram.
+- Overhead-Messung: Messung der Anzahl MPI-Messages und bytes sent.
+
+Zusammenfassung (Kurz)
+
+Tile Decomposition — notwendige Schritte (konzentriert)
+
+1) Tile-Datenstruktur
+- Definiere `struct Tile { int id; int x0, y0, w, h; };`.
+- Erzeuge ein regelmäßiges Gitter über das Bild (TileSize x TileSize). Rand-Tiles können kleiner sein.
+
+2) Tile-Größe
+- Wähle initial `TileSize = 16` oder `32`. Kleinere Tiles verbessern Balance, größere senken Scheduling-Overhead. Messtests erforderlich.
+
+3) API: `renderTile`
+- Implementiere in `raytracer.hpp/cpp` eine Methode:
+  `void RayTracer::renderTile(int x0, int y0, int w, int h, std::vector<Color>& out)`
+- Die Funktion füllt `out` mit `w*h` Pixeln (row-major) für das Tile; keine MPI-Operationen in dieser Funktion.
+
+4) Scheduling (Master/Worker)
+- Master (Rank 0) erzeugt Tile-Liste und verwaltet Index `next_tile`.
+- Worker: sendet Anfrage, Master sendet Tile (Tile struct) oder `MSG_DONE`.
+- Worker ruft `renderTile()` auf und sendet das fertige Pixel-Buf zurück an Master (oder schreibt in gemeinsamen Speicher / Paralleles I/O).
+- Master sammelt Tile-Resultate und schreibt sie an die richtigen Offsets in `full_buf`.
+
+5) Deterministisches RNG per Tile
+- Seed per Tile: `seed = base_seed ^ (tile.id * 10007)` (oder Kombination tile coords), damit Overlay-Reproduktionen unabhängig von Scheduling sind.
+
+6) Kommunikation & Performance
+- Sende nur notwendige Daten (Tile-ID + Pixel-Buf). Batch mehrere Tiles pro Nachricht, falls Master-Bottleneck auftritt.
+- Metriken: Zeit pro Tile, Anzahl Nachrichten, bytes, idle time per rank.
+
+7) Testing & Messung
+- Korrektheit: render kleines Bild mit fixem Seed und verify checksum.
+- Balance-Test: Sweep `TileSize` (16,32,64) und messe max/avg/std der per-rank compute times.
+
+Minimaler Implementierungs-Plan (pragmatisch)
+1. Füge `renderTile`-Signatur und Implementierung in `raytracer.cpp` hinzu.
+2. Implementiere einfaches Master/Worker-Protokoll in `main.cpp` (synchroner Request/Reply, Master sammelt Ergebnisse).
+3. Seed per Tile anpassen.
+4. Instrumentiere Tile-Timings und laufe Tests für TileSize-Sweep.
+
+Das sind die notwendigen, fokussierten Schritte zur Einführung einer Tile-Decomposition. Nach stabiler Scheduling-Grundlage können weitere Optimierungen (SIMD, BVH, thread-level parallelism) folgen.

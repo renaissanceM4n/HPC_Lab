@@ -8,7 +8,7 @@
 #SBATCH --error=strong_scaling_%j.err     
 #SBATCH --time=01:00:00                   
 #SBATCH --partition=intelsr_devel
-#SBATCH --exclusive
+#SBATCH --exclusive 
 
 unset SLURM_EXPORT_ENV
 

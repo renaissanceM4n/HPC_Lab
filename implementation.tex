@@ -1,0 +1,154 @@
+\section{Implementation}
+
+This chapter describes two different parallelization approaches that were implemented and evaluated for the Snowman ray tracer. The first approach uses \textbf{tile-based decomposition} with square tiles of fixed size, where the image is divided into independent rectangular regions and dynamically distributed to worker processes. The second approach employs \textbf{row-based distribution}, dividing the image into horizontal stripes with adaptive stripe heights based on cluster size. Both approaches use a Master-Worker pattern with dynamic load balancing.
+
+Both implementations divide the $1024 \times 1024$ image into independent tiles of different sizes. The master maintains a tile queue and assigns tiles on-demand to workers via point-to-point MPI messages. Workers render their assigned tiles function and send results back to the master, which reconstructs the full image.
+
+Crucially, each tile receives a deterministic RNG seed, ensuring that snowflake positions remain reproducible regardless of the scheduling order in which tiles are rendered. This is essential for scientific reproducibility when comparing performance across different process counts.
+
+
+\subsection{Quadratic Tiles}
+
+The quadratic tile decomposition approach implements a Master/Worker protocol where the master process (rank 0) dynamically distributes small square image tiles to worker processes, eliminating the blocking collective synchronization of the baseline approach.
+
+\subsubsection{Tile Generation and Metadata}
+
+The image is divided into independent square tiles of fixed size (e.g., $32 \times 32$ pixels). During initialization, the master generates all tiles and stores them in a vector with the following metadata structure:
+
+\begin{lstlisting}
+struct Tile { int id; int x0; int y0; int w; int h; };
+\end{lstlisting}
+
+Here, \texttt{id} is a unique tile identifier, \texttt{x0} and \texttt{y0} are the top-left corner coordinates in image space, and \texttt{w} and \texttt{h} are the tile width and height (which may be smaller at image boundaries). A nested loop iterates over the image in tile-sized increments:
+
+\begin{lstlisting}
+const int TILE_SIZE = 32;
+std::vector<Tile> tiles;
+int id = 0;
+for (int y = 0; y < image_size; y += TILE_SIZE) {
+    for (int x = 0; x < image_size; x += TILE_SIZE) {
+        int w = std::min(TILE_SIZE, image_size - x);
+        int h = std::min(TILE_SIZE, image_size - y);
+        tiles.push_back(Tile{id, x, y, w, h});
+        ++id;
+    }
+}
+\end{lstlisting}
+
+For a $1024 \times 1024$ image with $32 \times 32$ tiles, this generates exactly 1,024 independent tiles.
+
+\subsubsection{Master Process: Dynamic Tile Distribution}
+
+The master maintains a work queue and distributes tiles to available workers on-demand. The distribution strategy is as follows:
+
+\begin{enumerate}
+    \item \textbf{Initial Distribution}: At startup, the master sends one tile to each worker (except itself) using asynchronous point-to-point MPI\_Send with tag 1 (work tag). The tile metadata is packed into a 5-integer array: \texttt{[tile\_id, x0, y0, w, h]}.
+    
+    \item \textbf{Main Loop}: The master enters a loop that receives tile results from workers. Upon receiving a result (with tag 4 for the header and tag 5 for pixel data):
+    \begin{itemize}
+        \item Extract the worker rank from the MPI status
+        \item Receive the tile header (tile\_id, w, h)
+        \item Receive the rendered pixel buffer (w × h × 3 bytes in RGB format)
+        \item Receive timing information (elapsed time for this tile)
+        \item Reconstruct the tile into the full image buffer at the correct offset
+        \item Immediately assign the next available tile to this worker (or send a termination signal if all tiles are assigned)
+    \end{itemize}
+    
+    \item \textbf{Image Reconstruction}: As results arrive, the master copies each tile's pixel buffer into the global image buffer at coordinates $(x0, y0)$:
+    
+\begin{lstlisting}
+Tile t = tiles[tile_id];
+for (int row = 0; row < t.h; ++row) {
+    int dest_row = t.y0 + row;
+    int dest_off = (dest_row * image_size + t.x0) * 3;
+    int src_off = row * t.w * 3;
+    std::memcpy(&full_buf[dest_off], &buf[src_off], t.w * 3);
+}
+\end{lstlisting}
+    
+    \item \textbf{Termination}: Once all tiles have been sent and all results received, the master terminates workers by sending a message with tag 2 (termination tag).
+\end{enumerate}
+
+\subsubsection{Worker Process: On-Demand Rendering}
+
+Each worker process enters a loop that repeatedly receives tiles, renders them, and reports results:
+
+\begin{lstlisting}
+while (true) {
+    MPI_Status status;
+    int meta[5];
+    MPI_Recv(meta, 5, MPI_INT, 0, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+    if (status.MPI_TAG == 2) {
+        break; // done signal received
+    }
+    int tile_id = meta[0];
+    int x0 = meta[1];
+    int y0 = meta[2];
+    int w = meta[3];
+    int h = meta[4];
+    
+    // Compute deterministic seed for this tile
+    unsigned int seed = (tile_id * 10007u) ^ (rank + 12345);
+    
+    // Render the tile with timing instrumentation
+    double t0 = MPI_Wtime();
+    std::vector<Color> out;
+    raytracer.renderTile(x0, y0, w, h, seed, out);
+    double t1 = MPI_Wtime();
+    double elapsed = t1 - t0;
+    
+    // Convert Color pixels to RGB byte buffer
+    int bufsize = w * h * 3;
+    std::vector<unsigned char> buf(bufsize);
+    for (int i = 0; i < w * h; ++i) {
+        buf[3*i + 0] = out[i].r;
+        buf[3*i + 1] = out[i].g;
+        buf[3*i + 2] = out[i].b;
+    }
+    
+    // Send results back to master
+    int header[3] = {tile_id, w, h};
+    MPI_Send(header, 3, MPI_INT, 0, 4, MPI_COMM_WORLD);
+    MPI_Send(buf.data(), bufsize, MPI_UNSIGNED_CHAR, 0, 5, MPI_COMM_WORLD);
+    MPI_Send(&elapsed, 1, MPI_DOUBLE, 0, 6, MPI_COMM_WORLD);
+}
+\end{lstlisting}
+
+The key advantage of this worker design is \textbf{work stealing} through on-demand tile requests. A worker that finishes rendering a tile quickly will immediately request the next tile from the master, while a worker that encounters a computationally expensive region will take longer on a single tile. This naturally distributes work imbalances across the 1,024 tiles, preventing any single slow worker from blocking others. Each worker independently accumulates computation time through the elapsed measurements, enabling fine-grained load balance analysis across the entire execution.
+
+\subsubsection{The renderTile() Function}
+
+The core rendering logic is encapsulated in \texttt{RayTracer::renderTile(int x0, int y0, int w, int h, unsigned int seed, std::vector<Color>\& out)} (implemented in raytracer.cpp, lines 268--350).
+
+This function renders all pixels in the rectangular region from $(x0, y0)$ to $(x0+w-1, y0+h-1)$:
+
+\begin{enumerate}
+    \item \textbf{Initialization}: Set up camera parameters (position, direction, field of view), lighting parameters (ambient light, sunlight direction), and compute the screen-to-ray projection matrix.
+    
+    \item \textbf{Snowflake Generation}: Generate 75,000 snowflakes using a seeded random number generator. The seed is \textbf{unique per tile}, ensuring that snowflake positions are identical across different runs with the same tile ID, regardless of which rank renders it or when. This is critical for reproducibility.
+    
+    \item \textbf{Per-Pixel Ray Tracing}: For each pixel $(x, y)$ in the tile:
+    \begin{itemize}
+        \item Convert pixel coordinates to normalized device coordinates (NDC)
+        \item Compute the ray direction using the camera's perspective transform
+        \item Cast the ray through the scene and find the closest intersection (either with a sphere or the ground plane)
+        \item Compute lighting: combine ambient light, direct sunlight with shadow checks, and snowflake reflections
+        \item Return the final color
+    \end{itemize}
+    
+    \item \textbf{Output}: Store all computed colors in the output buffer, which is then packed into RGB bytes and transmitted back to the master.
+\end{enumerate}
+
+\subsubsection{Message Protocol Summary}
+
+The MPI communication uses the following protocol:
+
+\begin{itemize}
+    \item \textbf{Master → Worker (Tag 1, Work)}: 5 integers \texttt{[tile\_id, x0, y0, w, h]}
+    \item \textbf{Master → Worker (Tag 2, Done)}: Empty message (0 bytes) to signal termination
+    \item \textbf{Worker → Master (Tag 4, Header)}: 3 integers \texttt{[tile\_id, w, h]}
+    \item \textbf{Worker → Master (Tag 5, Pixels)}: w × h × 3 unsigned chars (RGB pixel buffer)
+    \item \textbf{Worker → Master (Tag 6, Timing)}: 1 double (elapsed time in seconds for this tile)
+\end{itemize}
+
+This message-passing design enables truly asynchronous work distribution: fast workers finish and request new tiles immediately without waiting for slow workers, naturally achieving load balancing.

@@ -9,7 +9,7 @@ times_max = np.array([10.8437, 11.4552, 6.12348, 12.3622, 9.65286, 12.4096, 10.4
 speedup_measured = (times_max[0] * workers) / times_max
 
 # --- Theoretical Speedups (Gustafson's Law) for different serial fractions ---
-serial_fractions = [0.1, 0.2, 0.5]
+serial_fractions = [0.0001, 0.001, 0.01]
 colors = ['blue', 'green', 'purple']
 
 # --- Plot ---

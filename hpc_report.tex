@@ -1,0 +1,534 @@
+\documentclass[12pt]{report}
+\usepackage[english]{babel}
+\usepackage[utf8x]{inputenc}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{hyperref} 
+\usepackage{geometry}
+\usepackage{pdfpages}
+\usepackage{graphicx}
+\usepackage{subcaption} 
+\usepackage{subfigure}
+\usepackage{mathtools}
+\usepackage{pythontex} 
+\usepackage{listings}
+\usepackage{titlesec}
+
+\usepackage{listings}
+\usepackage{xcolor}
+
+\lstset{
+    language=C++,
+    basicstyle=\ttfamily\small,
+    keywordstyle=\color{blue},
+    commentstyle=\color{gray},
+    breaklines=true,
+    tabsize=2,
+    numbers=left,
+    numberstyle=\tiny,
+    frame=tb
+}
+\renewcommand{\thesection}{\arabic{section}.}
+
+
+\urlstyle{same}
+\geometry{margin=2cm}
+\usepackage{fancyhdr} 
+\urlstyle{same}
+\geometry{margin=2cm}
+
+% Define the cover page style
+\fancypagestyle{coverpage}{
+%\vspace{3ex}
+  \fancyhf{} % Clear header and footer
+  \renewcommand{\headrulewidth}{0pt} % Remove header rule
+  \renewcommand{\footrulewidth}{0pt} % Remove footer rule
+  \vspace*{-2cm}
+  % Right logo
+  \fancyfoot[R]{\raisebox{4cm}{\includegraphics[height=2.3cm]{logos/uni-bonn-logo.jpg}}}
+ \vspace*{-0.5cm}
+}
+
+
+
+
+\begin{document}
+ \setlength {\marginparwidth }{2cm} 
+\begin{titlepage}
+
+\newcommand{\HRule}{\rule{\linewidth}{0.5mm}}
+\center
+
+%	HEADING SECTIONS
+\vspace*{2cm}
+\textsc{\LARGE University of Bonn}\\[0.5cm]
+\textsc{\Large High Performance Computing Lab}\\[0.5cm]
+\textsc{\large (Winter Semester 2025)}\\[0.5cm] 
+
+%	TITLE SECTION
+
+\HRule\\[0.4cm]
+{\huge \bfseries {Tile Decomposition and Load Balancing for Ray Tracing}
+}
+\HRule \\[3.5cm]
+ 
+%	AUTHOR SECTION
+
+\begin{minipage}{1\textwidth}
+\begin{flushleft} \large
+\textsc{\large Author:}\\[0.5cm]
+
+\textsc{David Peitz} 
+\hspace{6.2cm}{50335697}\\
+
+\end{flushleft}
+
+\end{minipage}\\[2cm]
+\hfill \break
+\break{}
+\thispagestyle{coverpage}
+
+{\large \today}\\[2cm] % Date
+
+\vfill
+\end{titlepage}
+
+\section{Introduction}
+
+Ray tracing is a computationally intensive graphics rendering technique widely used in image synthesis and scientific visualization. When scaled to distributed memory systems using MPI (Message Passing Interface), efficient load balancing becomes critical for achieving good parallel scaling. This project investigates the effectiveness of Tile Decomposition as a load-balancing strategy for the SNOWMAN ray tracer, an application designed by Gayatri Manda in the context of high-performance computing education.
+
+The primary objective is to improve the scaling behavior and reduce MPI overhead by transitioning from a static, row-based domain decomposition to a dynamic, tile-based work distribution scheme. This report documents the optimization approach, initial baseline measurements, and performance improvements achieved through tile decomposition.
+
+\section{Problem Statement}
+
+The original SNOWMAN implementation employs a static, horizontal-strip decomposition strategy. Each MPI rank receives a fixed set of pixel rows based on its rank number. The master process renders rows assigned to its rank, while workers render their assigned regions. At the end of computation, all ranks synchronize via MPI\_Gatherv to collect results from all processes into the master.
+
+This approach limits parallel scaling when pixel computation costs vary significantly across the image. Since ray tracing cost depends on scene complexity static allocation inevitably assigns heterogeneous work to different ranks. Because rows are assigned statically and contiguously, some ranks may receive regions dominated by snowmen while others receive primarily background. At the end of each rendering phase, MPI\_Gatherv forces all 96 processes to wait for the slowest rank before proceeding. The slowest rank determines the overall iteration time, leaving faster ranks idle. This can create severe load imbalance, particularly at high process counts.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.85\textwidth]{strong_scaling_speedup_max.png}
+    \caption{Strong Scaling Speedup: row-based decomposition measured across 1--96 processes.}
+    \label{fig:strong_scaling_baseline}
+\end{figure}
+To quantify this bottleneck, the original row-based implementation was benchmarked with up to 96 processes. Figure \ref{fig:strong_scaling_baseline} shows strong scaling behavior with a fixed test case of a $1024 \times 1024$ pixel image and 4 snowmen. 
+
+
+
+% \begin{figure}[h]
+%     \centering
+%     \includegraphics[width=0.85\textwidth]{weak_scaling_speedup_max.png}
+%     \caption{Weak Scaling Speedup (Baseline): Even with proportional problem size increase, efficiency degrades at high process counts, confirming that the issue is synchronization overhead, not absolute compute cost.}
+%     \label{fig:weak_scaling_baseline}
+% \end{figure}
+
+A Linaro Forge performance report of the static implementation reveals the root cause:
+
+\begin{itemize}
+    \item \textbf{1 process (685s)}: Pure serial computation, no MPI overhead.
+    \item \textbf{32 processes (25s)}: Compute-bound ($\sim$86\%), MPI only $\sim$13\% (3.4 seconds).
+    \item \textbf{96 processes (49s)}: MPI-bound ($\sim$85\%, 41 seconds), Compute only $\sim$15\%.
+\end{itemize}
+
+Synchronization overhead dominates computation by a factor of 5.7×. Nearly all MPI time is spent in MPI\_Gatherv, indicating that this collective operation is the binding constraint. The collective barrier forces all 96 processes to wait for the slowest rank, and because work is statically and unequally distributed, some ranks become severely load-imbalanced. This bottleneck is illustrated in Figure \ref{fig:vampir_trace_baseline}, which exemplarily shows the trace for 8 processes to visualize the synchronization barrier pattern that intensifies with larger process counts.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.95\textwidth]{vampir_scorep_trace_old.png}
+    \caption{MPI Trace Visualization (Vampir): Static row-based decomposition. The trace shows exemplarily 8 processes to illustrate the MPI\_Gatherv bottleneck pattern. All ranks synchronize at the collective call, with many processes idle (white regions) while waiting for the slowest rank to complete. The extensive orange regions indicate MPI communication overhead dominating computation (blue regions).}
+    \label{fig:vampir_trace_baseline}
+\end{figure}
+
+This severity of imbalance motivates an alternative approach: instead of static allocation with blocking collective synchronization, a dynamic work distribution strategy can smooth out variance across the image and eliminate the all-to-one bottleneck.
+
+\newpage
+
+\section{Optimization Approach}
+To overcome the synchronization bottleneck identified in the baseline measurements Tile Decomposition replaces static row-based allocation with dynamic work units. The image is divided into small square tiles (e.g., $32 \times 32$ pixels), which serve as independent units of work. A Master/Worker Model is employed where the master process (rank 0) maintains a tile queue and dynamically assigns tiles to worker ranks. Rather than assigning all work upfront, workers request tiles on-demand: faster workers that complete their assigned tiles request additional tiles immediately, reducing idle time.
+
+A critical implementation detail is deterministic RNG seeding: snowflake positions are seeded per-tile to ensure reproducible output regardless of scheduling order. Each tile receives a unique seed computed from its tile ID, guaranteeing that the final image is identical whether tiles are processed in any order.
+
+Expected benefits include reduced load imbalance and lower MPI overhead through smaller, more frequent point-to-point messages instead of one large collective operation.
+
+
+\newpage
+
+This chapter describes two different parallelization approaches that were implemented and evaluated for the Snowman ray tracer. The first approach uses \textbf{tile-based decomposition} with square tiles of fixed size, where the image is divided into independent rectangular regions and dynamically distributed to worker processes. The second approach employs \textbf{row-based distribution}, dividing the image into horizontal stripes with adaptive stripe heights based on cluster size. Both approaches use a Master-Worker pattern with dynamic load balancing.
+
+Both implementations divide the $1024 \times 1024$ image into independent tiles of different sizes. The master maintains a tile queue and assigns tiles on-demand to workers via point-to-point MPI messages. Workers render their assigned tiles function and send results back to the master, which reconstructs the full image.
+
+Crucially, each tile receives a deterministic RNG seed, ensuring that snowflake positions remain reproducible regardless of the scheduling order in which tiles are rendered. This is essential for scientific reproducibility when comparing performance across different process counts.
+
+
+\subsection{Quadratic Tiles}
+
+The image is divided into independent square tiles of fixed size (e.g., $32 \times 32$ pixels) The tile size can be passed when the executable is called. During initialization, the master generates all tiles and stores them in a vector with the following metadata structure:
+
+\begin{lstlisting}
+struct Tile { int id; int x0; int y0; int w; int h; };
+\end{lstlisting}
+
+Here, \texttt{id} is a unique tile identifier, \texttt{x0} and \texttt{y0} are the top-left corner coordinates in image space, and \texttt{w} and \texttt{h} are the tile width and height which may be smaller at image boundaries. A nested loop iterates over the image in tile-sized increments:
+
+\begin{lstlisting}
+const int TILE_SIZE = tile_size;
+std::vector<Tile> tiles;
+int id = 0;
+for (int y = 0; y < image_size; y += TILE_SIZE) {
+    for (int x = 0; x < image_size; x += TILE_SIZE) {
+        int w = std::min(TILE_SIZE, image_size - x);
+        int h = std::min(TILE_SIZE, image_size - y);
+        tiles.push_back(Tile{id, x, y, w, h});
+        ++id;
+    }
+}
+\end{lstlisting}
+
+For a $1024 \times 1024$ image with $32 \times 32$ tiles, this generates exactly 1,024 independent tiles.
+
+\subsection{Master Process: Dynamic Tile Distribution}
+
+The master maintains a work queue and distributes tiles to available workers on-demand. The distribution strategy is as follows:
+
+\begin{enumerate}
+    \item \textbf{Initial Distribution}: At startup, the master sends one tile to each worker (except itself) using asynchronous point-to-point MPI\_Send with tag 1 (work tag). The tile metadata is packed into a 5-integer array: \texttt{[tile\_id, x0, y0, w, h]}.
+    
+    \item \textbf{Main Loop}: The master enters a loop that receives tile results from workers. Upon receiving a result (with tag 4 for the header and tag 5 for pixel data):
+    \begin{itemize}
+        \item Extract the worker rank from the MPI status
+        \item Receive the tile header (tile\_id, w, h)
+        \item Receive the rendered pixel buffer (w × h × 3 bytes in RGB format)
+        \item Receive timing information (elapsed time for this tile)
+        \item Reconstruct the tile into the full image buffer at the correct offset
+        \item Immediately assign the next available tile to this worker (or send a termination signal if all tiles are assigned)
+    \end{itemize}
+    
+    \item \textbf{Image Reconstruction}: As results arrive, the master copies each tile's pixel buffer into the global image buffer at coordinates $(x0, y0)$:
+    
+\begin{lstlisting}
+Tile t = tiles[tile_id];
+for (int row = 0; row < t.h; ++row) {
+    int dest_row = t.y0 + row;
+    int dest_off = (dest_row * image_size + t.x0) * 3;
+    int src_off = row * t.w * 3;
+    std::memcpy(&full_buf[dest_off], &buf[src_off], t.w * 3);
+}
+\end{lstlisting}
+    
+    \item \textbf{Termination}: Once all tiles have been sent and all results received, the master terminates workers by sending a message with tag 2 (termination tag).
+\end{enumerate}
+
+\subsection{Worker Process: On-Demand Rendering}
+
+Each worker process enters a loop that repeatedly receives tiles, renders them, and reports results:
+
+\begin{lstlisting}
+while (true) {
+    MPI_Status status;
+    int meta[5];
+    MPI_Recv(meta, 5, MPI_INT, 0, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+    if (status.MPI_TAG == 2) {
+        break; // done signal received
+    }
+    int tile_id = meta[0];
+    int x0 = meta[1];
+    int y0 = meta[2];
+    int w = meta[3];
+    int h = meta[4];
+    
+    // Compute deterministic seed for this tile
+    unsigned int seed = (tile_id * 10007u) ^ (12345);
+    
+    // Render the tile with timing instrumentation
+    double t0 = MPI_Wtime();
+    std::vector<Color> out;
+    raytracer.renderTile(x0, y0, w, h, seed, out);
+    double t1 = MPI_Wtime();
+    double elapsed = t1 - t0;
+    
+    // Convert Color pixels to RGB byte buffer
+    int bufsize = w * h * 3;
+    std::vector<unsigned char> buf(bufsize);
+    for (int i = 0; i < w * h; ++i) {
+        buf[3*i + 0] = out[i].r;
+        buf[3*i + 1] = out[i].g;
+        buf[3*i + 2] = out[i].b;
+    }
+    
+    // Send results back to master
+    int header[3] = {tile_id, w, h};
+    MPI_Send(header, 3, MPI_INT, 0, 4, MPI_COMM_WORLD);
+    MPI_Send(buf.data(), bufsize, MPI_UNSIGNED_CHAR, 0, 5, MPI_COMM_WORLD);
+    MPI_Send(&elapsed, 1, MPI_DOUBLE, 0, 6, MPI_COMM_WORLD);
+}
+\end{lstlisting}
+
+The key advantage of this worker design is work stealing through on-demand tile requests. A worker that finishes rendering a tile quickly will immediately request the next tile from the master, while a worker that encounters a computationally expensive region will take longer on a single tile. This naturally distributes work imbalances across the 1,024 tiles, preventing any single slow worker from blocking others.
+
+
+\subsection{Row-Based tiles}
+In this approach, we still utilize a \textbf{Master-Worker architecture}, but this time tiles aren't quadratic but instead contiguous rows: The image is divided into horizontal stripes, which are then dynamically distributed to workers by a master process. 
+
+Key design features:
+\begin{itemize}
+    \item \textbf{Stripe granularity:} Image height is divided by $(size \times tiles\_per\_worker)$, where $tiles\_per\_worker = 8$ for small clusters (size < 32) and 16 otherwise.
+    \item \textbf{Master participation:} Rank 0 performs local computation with smaller stripe heights (1/16 to 1/4 of worker stripe height) to offset communication overhead.
+    \item \textbf{Shared snowflakes:} Rank 0 generates 75k snowflake positions with fixed seed and broadcasts them to all workers, ensuring consistency across stripe boundaries.
+    \item \textbf{Non-blocking polling:} Master uses \texttt{MPI\_Iprobe} to poll for results without blocking, enabling concurrent local computation.
+\end{itemize}
+
+\subsubsection{Snowflake Broadcasting}
+In the original version of the code, all processes used different seeds to randomly generate snowflakes. As a result, they don't agree on where the snowflakes should be, leading to visual inconsistencies at tile boundaries. To solve this, snowflakes are generated on rank 0 and broadcast to all workers (raytracer.cpp, lines 91--113):
+
+\begin{lstlisting}
+if (rank == 0) {
+    std::mt19937 rng(12345);
+    std::normal_distribution<double> dist_xz(0.0, 6.0);
+    std::uniform_real_distribution<double> dist_y(-1.0, 25.0);
+    for (int i = 0; i < snowflake_count; ++i) {
+        snowflakes[i] = Vec3(x_rand, y_rand, z_rand);
+    }
+}
+MPI_Bcast(snowflakes.data(), snowflake_count * 3, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+\end{lstlisting}
+
+This ensures consistent snowflakes across all worker stripes, avoiding visual artifacts at stripe boundaries. The actual code for generating the snowflakes remains the same.
+
+\subsubsection{Work Distribution}
+The stripe heights for both the master and the workers are calculated based on the number of process (raytracer.cpp, lines 319--322):
+
+\begin{lstlisting}
+const int tiles_per_worker = (size < 32) ? 8 : 16;
+const int tile_height = std::max(1, height / (size * tiles_per_worker));
+const int master_tile_height = (size < 32) ? (tile_height / 16) : (tile_height / 4);
+\end{lstlisting}
+
+The constants were determined by testing different values to find the optimal combination.
+
+\paragraph{Initial Distribution}
+The master sends initial stripes to all active workers using the \texttt{send\_work} lambda (raytracer.cpp, lines 337--346):
+
+\begin{lstlisting}
+auto send_work = [&](int worker_rank) {
+    if (next_row >= height) {
+        int term[2] = {-1, 0};  // Termination signal
+        MPI_Send(term, 2, MPI_INT, worker_rank, 
+                 static_cast<int>(Tag::WORK), MPI_COMM_WORLD);
+        --active_workers;
+        return;
+    }
+    int rows = std::min(tile_height, height - next_row);
+    int msg[2] = {next_row, rows};
+    MPI_Send(msg, 2, MPI_INT, worker_rank, 
+             static_cast<int>(Tag::WORK), MPI_COMM_WORLD);
+    next_row += rows;
+};
+for (int r = 1; r <= active_workers; ++r)
+    send_work(r);
+\end{lstlisting}
+
+To combat code duplication, we employ a lambda which the master can call to send new work to a worker. Each message contains two integers: starting row and row count. To signal that all work is done, the master sends a starting row of $-1$ and row count of $0$. When a worker receives this, he will return. We will see this in more depth now:
+
+\paragraph{Master Coordination Loop}
+The master's main loop (raytracer.cpp, lines 350--390) interleaves local computation with non-blocking polling:
+
+\begin{lstlisting}
+while (active_workers) {
+    if (next_row < height) {
+        if (master_tile_height > 0) {
+            int rows_to_compute = std::min(master_tile_height, height - next_row);
+            compute_tile_flat(next_row, rows_to_compute, master_buffer.data() + ...);
+            next_row += rows_to_compute;
+        }
+    } else {
+        // Block waiting for result when no local work
+        MPI_Recv(header, 2, MPI_INT, MPI_ANY_SOURCE, 
+                 static_cast<int>(Tag::RESULT), ...);
+        // ... receive and place pixels ...
+        send_work(status.MPI_SOURCE);
+    }
+    
+    // Non-blocking poll for available results
+    int flag = 0;
+    while (MPI_Iprobe(MPI_ANY_SOURCE, static_cast<int>(Tag::RESULT), 
+                      MPI_COMM_WORLD, &flag, &status), flag) {
+        MPI_Recv(header, 2, MPI_INT, status.MPI_SOURCE, ...);
+        // ... receive and place pixels ...
+        send_work(status.MPI_SOURCE);
+    }
+}
+\end{lstlisting}
+
+Key features: (1) Local work proceeds in parallel with worker coordination, (2) \texttt{MPI\_Iprobe} checks for messages without blocking, (3) Workers are immediately sent new work upon returning results.
+
+\paragraph{Worker Loop}
+Workers enter a receive-compute-send loop (raytracer.cpp, lines 393--409):
+
+\begin{lstlisting}
+std::vector<unsigned char> local_buf;
+while (true) {
+    int msg[2];
+    MPI_Recv(msg, 2, MPI_INT, 0, static_cast<int>(Tag::WORK), ...);
+    int start = msg[0], rows = msg[1];
+    if (start < 0 || rows <= 0) break;  // Termination
+    
+    local_buf.resize(rows * width * 3);
+    compute_tile_flat(start, rows, local_buf.data());
+    
+    int header[2] = {start, rows};
+    MPI_Send(header, 2, MPI_INT, 0, static_cast<int>(Tag::RESULT), ...);
+    MPI_Send(local_buf.data(), local_buf.size(), MPI_UNSIGNED_CHAR, 0, ...);
+}
+\end{lstlisting}
+
+\newpage
+
+\section{Results}
+
+Table \ref{tab:perf_comparison} summarizes the measured performance before and after implementing Tile Decomposition by Linaro Forge.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|c|c|c|c|c|c|c|c|c|}
+\hline
+\textbf{Metric} & \multicolumn{2}{c|}{\textbf{1 Process}} & \multicolumn{2}{c|}{\textbf{48 Processes}} & \multicolumn{2}{c|}{\textbf{96 Processes}} \\
+\hline
+ & \textbf{Old} & \textbf{New} & \textbf{Old} & \textbf{New} & \textbf{Old} & \textbf{New} \\
+\hline
+\textbf{Total Time (s)} & 685 & 715 & 23 & 15 & 49 & 8 \\
+\hline
+\textbf{Compute (\%)} & 100 & 100 & 62.3 & 96.5 & 14.9 & 95.4 \\
+\hline
+\textbf{MPI (\%)} & 0 & 0 & 37.7 & 3.5 & \textbf{85.1} & \textbf{4.6} \\
+\hline
+\textbf{Speedup vs. 1p} & 1$\times$ & 1$\times$ & 29.8$\times$ & 47.7$\times$ & 14$\times$ & \textbf{89$\times$} \\
+\hline
+\end{tabular}
+\caption{Performance Comparison: Static Row Decomposition (Old) vs. Tile Decomposition (New). Image size: $1024 \times 1024$, 4 snowmen.}
+\label{tab:perf_comparison}
+\end{table}
+
+The results demonstrate consistent improvements across all higher process counts:
+
+\begin{itemize}
+    \item \textbf{48 processes}: Baseline shows 62.3\% compute, 37.7\% MPI (23s total). With tile decomposition, compute time increases to 96.5\%, reducing MPI to 3.5\% (15s total), achieving 47.7× speedup vs. 29.8× baseline—a 1.6× improvement in parallel efficiency.
+    \item \textbf{96 processes}: Execution time reduced from 49 seconds to 8 seconds ($\sim 6.1\times$ speedup). Speedup improved from $14\times$ (baseline) to $89\times$ (tile-based), a 6.4× improvement in parallel efficiency.
+    \item \textbf{MPI burden reduction}: At both 48p and 96p, MPI overhead drops dramatically (37.7\% → 3.5\% at 48p; 85.1\% → 4.6\% at 96p), shifting from MPI-bound to compute-bound behavior.
+\end{itemize}
+
+The shift from MPI-bound to Compute-bound is the critical indicator of success. The dynamic tile distribution eliminates the synchronization bottleneck from the static approach, allowing faster processes to continue work while slower ones catch up. The consistent improvements at both 48 and 96 processes demonstrate that tile decomposition effectively addresses load imbalance across a range of process counts.
+
+To further analyze the effectiveness of tile decomposition in improving load balance, the per-rank computation times collected during execution can be observed. The Imbalance Ratio quantifies load imbalance.
+An imbalance ratio of 1.0 indicates perfect load balance. With a higher imbalance ratio the load balancing decreases.
+
+For a given execution with $N$ processes:
+\begin{itemize}
+    \item $t_i$ = computation time for rank $i$
+    \item $t_{\max}$ = $\max_i(t_i)$ = maximum computation time across all ranks
+    \item $t_{\text{avg}}$ = $\frac{1}{N}\sum_i t_i$ = average computation time across all ranks
+\end{itemize}
+
+\begin{equation}
+Imbalance Ratio = \frac{t_{\max}}{t_{\text{avg}}}
+\end{equation}
+
+
+The baseline strong scaling measurements reveal severe load imbalance in the static row-based approach at high process counts:
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|c|c|c|c|}
+\hline
+\textbf{Processes} & \textbf{Max (s)} & \textbf{Avg (s)} & \textbf{Ratio} \\
+\hline
+48 & 22.72 & 14.17 & 1.60 \\
+\hline
+64 & 12.42 & 10.68 & 1.16 \\
+\hline
+96 & 45.84 & 7.14 & 6.42 \\
+\hline
+\end{tabular}
+\caption{Static Row Decomposition: severe imbalance at 96p where the slowest rank is 6.4× slower than average.}
+\label{tab:baseline_load_balance}
+\end{table}
+
+This imbalance occurs because static row allocation assigns contiguous image regions to ranks, and pixel compute cost varies.
+The dynamic Master/Worker tile distribution significantly improves load balance. Measurements from tile decomposition with 96 processes show:
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|c|c|c|c|}
+\hline
+\textbf{Tile Size} & \textbf{Max (s)} & \textbf{Avg (s)} & \textbf{Ratio} \\
+\hline
+$16 \times 16$ & 12.41 & 11.89 & 1.044 \\
+\hline
+$32 \times 32$ & 12.40 & 11.78 & 1.053 \\
+\hline
+$64 \times 64$ & 12.40 & 11.45 & 1.083 \\
+\hline
+\end{tabular}
+\caption{Tile Decomposition at 96 processes: imbalance ratio reduced from 6.42 to $\sim$1.05, achieving $\sim$6.2× improvement factor.}
+\label{tab:tile_load_balance}
+\end{table}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.9\textwidth]{tile_benchmark.png}
+    \caption{Tile Benchmark Results: Speedup for different tile sizes (8$\times$8 through 128$\times$128 pixels). The benchmark demonstrates that tile decomposition achieves nearly linear speedup.}
+    \label{fig:tile_benchmark}
+\end{figure}
+
+The smaller tile sizes of $8 \times 8$ and $16 \times 16$ pixels achieve the best performance, providing finer scheduling granularity that enables superior load balancing across heterogeneous computation costs.
+
+In contrast to the baseline blocking pattern, the optimized tile-based approach eliminates the global MPI\_Gatherv barrier and distributes work on-demand to workers via point-to-point messages. Figure \ref{fig:vampir_trace_optimized} visualizes this fundamental shift: computation now dominates the timeline with minimal synchronization overhead.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.95\textwidth]{vampir_scorep_trace_new.png}
+    \caption{MPI Trace Visualization with Tile Decomposition: The trace shows rectangular tiles being distributed on-demand, with no blocking MPI\_Gatherv barrier. Workers continuously render tiles and report results asynchronously via point-to-point messages. Computation (blue regions) dominates the timeline, with minimal MPI overhead and no global synchronization points.}
+    \label{fig:vampir_trace_optimized}
+\end{figure}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.9\textwidth]{inter_strong_scaling.png}
+    \caption{Strong Scaling Comparison: Quadratic Tile Decomposition vs. Row-Based Distribution.}
+    \label{fig:inter_strong_scaling}
+\end{figure}
+
+The quadratic tile approach consistently outperforms the row-based distribution across all process counts, demonstrating superior load balancing for heterogeneous ray-tracing workloads. The fine-grained rectangular tiles enable more effective work stealing and reduce synchronization overhead compared to coarser row-based scheduling.
+
+\subsubsection{Key Observations}
+
+\begin{enumerate}
+    \item \textbf{MPI Overhead Reduction}: Tile decomposition reduces MPI overhead from 85.1\% to 4.6\% at 96 processes (18.5× reduction). This dramatic shift from synchronization-bound to compute-bound behavior is the primary driver of performance improvement, enabling speedup to scale from $14\times$ (baseline) to $89\times$.
+    
+    \item \textbf{Load Balance Improvement}: The imbalance ratio improves from 6.42 (static row decomposition) to approximately 1.05 (tile decomposition), a 6--7× improvement. With ratio 1.05, the slowest rank is only 5\% slower than average, meaning nearly all ranks remain compute-saturated. In contrast, the baseline 6.42 imbalance causes $\sim$84\% idle time on faster-finishing ranks.
+    
+    \item \textbf{Tile Size Robustness}: Smaller tile sizes (8×8 and 16×16 pixels) achieve optimal performance through finer scheduling granularity. Most tile sizes (8, 16, 32) achieve comparable imbalance ratios $\sim$1.05, demonstrating that the tile decomposition approach is robust across a range of configurations.
+    
+    \item \textbf{Quadratic vs. Row-Based}: The quadratic tile approach consistently outperforms row-based distribution (Figure \ref{fig:inter_strong_scaling}), achieving superior scaling efficiency across all process counts due to more effective work stealing and reduced collective synchronization overhead.
+\end{enumerate}
+
+This measured improvement validates the tile decomposition strategy: dynamic scheduling distributes heterogeneous work evenly across the image, eliminating the static partitioning bottleneck.
+
+\newpage
+
+\section{Discussion}
+
+The baseline approach uses \texttt{MPI\_Gatherv}, a blocking collective operation that forces all processes to wait for the slowest rank before gathering results. With a $1024 \times 1024$ image and 96 processes, each rank computes roughly $\sim 10,922$ pixels. Variance in ray-tracing cost due to shadows, snowflakes, and geometric complexity causes some ranks to finish significantly faster than others, leaving them idle during the collective.
+
+Tile decomposition eliminates this bottleneck by breaking work into small units and using a Master/Worker scheme. A fast worker finishes its tile and immediately requests another without waiting for global synchronization.
+
+Collective operations such as \texttt{MPI\_Gatherv} require participation of all ranks, which effectively introduces an O(P) latency component, where P is the number of processes. The master only receives point-to-point messages from the worker that finished, avoiding the O(P) synchronization cost of collective operations. The final image assembly happens incrementally as results arrive, not as one blocking gather at the end.
+
+Linaro Forge confirms the architectural benefits. The baseline at 96 processes shows 85.1\% time spent in MPI (almost entirely \texttt{MPI\_Gatherv}), with only 14.9\% on actual computation. After implementing tile decomposition, the same workload shows 4.6\% MPI time and 95.4\% compute time—an 18.5× reduction in MPI overhead.
+
+The combination of fine-grained task decomposition, absence of global barriers, and asynchronous point-to-point communication shifts the application from synchronization-bound to compute-bound, enabling substantially improved scalability.
+
+
+
+\end{document}
