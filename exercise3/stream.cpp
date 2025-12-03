@@ -3,6 +3,8 @@
 #include <cmath>
 #include <fstream>
 #include <cstdlib>
+#include <omp.h>
+
 int main(int argc, char** argv)
 {
     if (argc < 2) {
@@ -16,7 +18,7 @@ int main(int argc, char** argv)
     double* a = (double*) aligned_alloc(64, N * sizeof(double));
     double* b = (double*) aligned_alloc(64, N * sizeof(double));
     double* c = (double*) aligned_alloc(64, N * sizeof(double));
-
+    #pragma omp parallel for
     for (size_t i = 0; i < N; ++i) {
         a[i] = 0.0;
         b[i] = 1.0;
@@ -28,9 +30,10 @@ int main(int argc, char** argv)
 
     do {
         auto start = std::chrono::high_resolution_clock::now();
-	
+        	
 	for (int k = 0; k < NITER; ++k) {
-                for (size_t i = 0; i < N; ++i) {
+                #pragma omp parallel for
+		for (size_t i = 0; i < N; ++i) {
                     a[i] = b[i] + s * c[i];
                 }
 
