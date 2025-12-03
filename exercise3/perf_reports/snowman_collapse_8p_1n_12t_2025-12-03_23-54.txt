@@ -1,0 +1,77 @@
+Command:        mpirun -np 8 --map-by ppr:8:node:PE=12 --bind-to core --report-bindings ./snowman_collapse 1024 4
+Resources:      1 node (96 physical, 96 logical cores per node)
+Memory:         1008 GiB per node
+Tasks:          8 processes, OMP_NUM_THREADS was 12
+Machine:        node159
+Architecture:   x86_64
+CPU Family:     sapphirerapids
+Start time:     Wed Dec 3 23:54:45 2025
+Total time:     9 seconds
+Full path:      /home/s13dpeit_hpc/Snowman/HPC_Lab/exercise3
+
+Summary: snowman_collapse is Compute-bound in this configuration
+Compute:                                     89.6%     (7.6s) |========|
+MPI:                                         10.4%     (0.9s) ||
+I/O:                                          0.0%     (0.0s) |
+This application run was Compute-bound (based on main thread activity). A breakdown of this time and advice for investigating further is in the CPU section below.
+As very little time is spent in MPI calls, this code may also benefit from running at larger scales.
+
+CPU:
+A breakdown of the 89.6% (7.6s) CPU time:
+Single-core code:                            <0.1%     (0.0s) ||
+OpenMP regions:                             100.0%     (7.6s) |=========|
+Scalar numeric ops:                          56.2%     (4.3s) |=====|
+Vector numeric ops:                          <0.1%     (0.0s) ||
+Memory accesses:                             36.3%     (2.8s) |===|
+The per-core performance is arithmetic-bound. Try to increase the amount of time spent in vectorized instructions by analyzing the compiler's vectorization reports.
+Significant time is spent on memory accesses. Use a profiler to identify time-consuming loops and check their cache performance.
+
+MPI:
+A breakdown of the 10.4% (0.9s) MPI time:
+Time in collective calls:                   100.0%     (0.9s) |=========|
+Time in point-to-point calls:                 0.0%     (0.0s) |
+Effective process collective rate:             894 kB/s
+Effective process point-to-point rate:        0.00 bytes/s
+
+I/O:
+A breakdown of the 0.0% (0.0s) I/O time:
+Time in reads:                                0.0%     (0.0s) |
+Time in writes:                               0.0%     (0.0s) |
+Effective process read rate:                  0.00 bytes/s
+Effective process write rate:                 0.00 bytes/s
+No time is spent in I/O operations. There's nothing to optimize here!
+
+OpenMP:
+A breakdown of the 100.0% (7.6s) time in OpenMP regions:
+Computation:                                 99.0%     (7.5s) |=========|
+Synchronization:                              1.0%     (0.1s) ||
+Physical core utilization:                  100.0%            |=========|
+System load:                                 87.3%            |========|
+OpenMP thread performance looks good. Check the CPU breakdown for advice on improving code efficiency.
+
+Memory:
+Per-process memory usage may also affect scaling:
+Mean process memory usage:                     182 MiB
+Peak process memory usage:                     188 MiB
+Peak node memory usage:                       0.0%            |
+Node memory usage metrics:
+
+Energy:
+A breakdown of how energy was used:
+CPU:                                      not supported
+System:                                   not supported
+Mean node power:                          not supported
+Peak node power:                              0.00 W
+Energy metrics are not available on this system.
+CPU metrics: Error reading /sys/class/powercap/intel-rapl:0/energy_uj: Permission denied
+
+Thread Affinity:
+A breakdown of how software threads have been pinned to logical cores (1 per physical core).
+Mean utilization:                           100.0%            |=========|
+Max load:                                     1.08 
+Migration opportunity:                        1.00 
+[ERROR] detected compute threads with overlapping affinity masks
+[ERROR] cores are oversubscribed
+[INFORMATION] consider improving node utilization by running 96 threads per node (1 thread per core).
+Consult Linaro MAP's Thread Affinity Advisor dialog for more details.
+
