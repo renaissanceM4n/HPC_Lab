@@ -1,0 +1,77 @@
+Command:        mpirun -np 16 --map-by ppr:16:node --bind-to numa --report-bindings ./snowman_no_collapse 1024 4
+Resources:      1 node (96 physical, 96 logical cores per node)
+Memory:         1008 GiB per node
+Tasks:          16 processes, OMP_NUM_THREADS was 4
+Machine:        node026
+Architecture:   x86_64
+CPU Family:     sapphirerapids
+Start time:     Wed Dec 3 21:41:17 2025
+Total time:     26 seconds
+Full path:      /home/s13dpeit_hpc/Snowman/HPC_Lab/exercise3
+
+Summary: snowman_no_collapse is Compute-bound in this configuration
+Compute:                                     86.7%    (22.1s) |========|
+MPI:                                         13.2%     (3.4s) ||
+I/O:                                         <0.1%     (0.0s) ||
+This application run was Compute-bound (based on main thread activity). A breakdown of this time and advice for investigating further is in the CPU section below.
+As very little time is spent in MPI calls, this code may also benefit from running at larger scales.
+
+CPU:
+A breakdown of the 86.7% (22.1s) CPU time:
+Single-core code:                            <0.1%     (0.0s) ||
+OpenMP regions:                             100.0%    (22.1s) |=========|
+Scalar numeric ops:                          56.0%    (12.4s) |=====|
+Vector numeric ops:                           0.0%     (0.0s) |
+Memory accesses:                             35.4%     (7.8s) |===|
+The per-core performance is arithmetic-bound. Try to increase the amount of time spent in vectorized instructions by analyzing the compiler's vectorization reports.
+Significant time is spent on memory accesses. Use a profiler to identify time-consuming loops and check their cache performance.
+
+MPI:
+A breakdown of the 13.2% (3.4s) MPI time:
+Time in collective calls:                   100.0%     (3.4s) |=========|
+Time in point-to-point calls:                 0.0%     (0.0s) |
+Effective process collective rate:             117 kB/s
+Effective process point-to-point rate:        0.00 bytes/s
+
+I/O:
+A breakdown of the <0.1% (0.0s) I/O time:
+Time in reads:                                0.0%     (0.0s) |
+Time in writes:                             100.0%     (0.0s) |=========|
+Effective process read rate:                  0.00 bytes/s
+Effective process write rate:                 41.2 MB/s
+Most of the time is spent in write operations with a low effective transfer rate. This may be caused by contention for the filesystem or inefficient access patterns. Use an I/O profiler to investigate which write calls are affected.
+
+OpenMP:
+A breakdown of the 100.0% (22.1s) time in OpenMP regions:
+Computation:                                 99.7%    (22.0s) |=========|
+Synchronization:                              0.3%     (0.1s) ||
+Physical core utilization:                   66.7%            |======|
+System load:                                 57.9%            |=====|
+Physical core utilization is low and some cores may be unused. Try increasing OMP_NUM_THREADS to improve performance.
+
+Memory:
+Per-process memory usage may also affect scaling:
+Mean process memory usage:                     117 MiB
+Peak process memory usage:                     124 MiB
+Peak node memory usage:                       0.0%            |
+Node memory usage metrics:
+
+Energy:
+A breakdown of how energy was used:
+CPU:                                      not supported
+System:                                   not supported
+Mean node power:                          not supported
+Peak node power:                              0.00 W
+Energy metrics are not available on this system.
+CPU metrics: Error reading /sys/class/powercap/intel-rapl:0/energy_uj: Permission denied
+
+Thread Affinity:
+A breakdown of how software threads have been pinned to logical cores (1 per physical core).
+Mean utilization:                            33.3%            |==|
+Max load:                                     2.50 
+Migration opportunity:                        1.00 
+[ERROR] 16 processes have overlapping affinity masks e.g. ranks 0 and 8
+[ERROR] detected compute threads with overlapping affinity masks
+[ERROR] cores are oversubscribed
+Consult Linaro MAP's Thread Affinity Advisor dialog for more details.
+

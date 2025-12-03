@@ -1,0 +1,77 @@
+Command:        mpirun -np 4 --map-by ppr:4:node --bind-to numa --report-bindings ./snowman_collapse 1024 4
+Resources:      1 node (96 physical, 96 logical cores per node)
+Memory:         1008 GiB per node
+Tasks:          4 processes, OMP_NUM_THREADS was 4
+Machine:        node026
+Architecture:   x86_64
+CPU Family:     sapphirerapids
+Start time:     Wed Dec 3 21:34:47 2025
+Total time:     51 seconds
+Full path:      /home/s13dpeit_hpc/Snowman/HPC_Lab/exercise3
+
+Summary: snowman_collapse is Compute-bound in this configuration
+Compute:                                     90.2%    (45.5s) |========|
+MPI:                                          9.8%     (4.9s) ||
+I/O:                                         <0.1%     (0.0s) ||
+This application run was Compute-bound (based on main thread activity). A breakdown of this time and advice for investigating further is in the CPU section below.
+As very little time is spent in MPI calls, this code may also benefit from running at larger scales.
+
+CPU:
+A breakdown of the 90.2% (45.5s) CPU time:
+Single-core code:                             0.0%     (0.0s) |
+OpenMP regions:                             100.0%    (45.5s) |=========|
+Scalar numeric ops:                          54.9%    (25.0s) |====|
+Vector numeric ops:                          <0.1%     (0.0s) ||
+Memory accesses:                             36.9%    (16.8s) |===|
+The per-core performance is arithmetic-bound. Try to increase the amount of time spent in vectorized instructions by analyzing the compiler's vectorization reports.
+Significant time is spent on memory accesses. Use a profiler to identify time-consuming loops and check their cache performance.
+
+MPI:
+A breakdown of the 9.8% (4.9s) MPI time:
+Time in collective calls:                   100.0%     (4.9s) |=========|
+Time in point-to-point calls:                 0.0%     (0.0s) |
+Effective process collective rate:             317 kB/s
+Effective process point-to-point rate:        0.00 bytes/s
+
+I/O:
+A breakdown of the <0.1% (0.0s) I/O time:
+Time in reads:                                0.0%     (0.0s) |
+Time in writes:                             100.0%     (0.0s) |=========|
+Effective process read rate:                  0.00 bytes/s
+Effective process write rate:                 62.4 MB/s
+Most of the time is spent in write operations with a low effective transfer rate. This may be caused by contention for the filesystem or inefficient access patterns. Use an I/O profiler to investigate which write calls are affected.
+
+OpenMP:
+A breakdown of the 100.0% (45.5s) time in OpenMP regions:
+Computation:                                 98.4%    (44.8s) |=========|
+Synchronization:                              1.6%     (0.7s) ||
+Physical core utilization:                   16.7%            |=|
+System load:                                 15.0%            ||
+Physical core utilization is low and some cores may be unused. Try increasing OMP_NUM_THREADS to improve performance.
+
+Memory:
+Per-process memory usage may also affect scaling:
+Mean process memory usage:                     184 MiB
+Peak process memory usage:                     191 MiB
+Peak node memory usage:                       0.0%            |
+Node memory usage metrics:
+
+Energy:
+A breakdown of how energy was used:
+CPU:                                      not supported
+System:                                   not supported
+Mean node power:                          not supported
+Peak node power:                              0.00 W
+Energy metrics are not available on this system.
+CPU metrics: Error reading /sys/class/powercap/intel-rapl:0/energy_uj: Permission denied
+
+Thread Affinity:
+A breakdown of how software threads have been pinned to logical cores (1 per physical core).
+Mean utilization:                            16.7%            |=|
+Max load:                                     1.25 
+Migration opportunity:                        1.00 
+[ERROR] detected compute threads with overlapping affinity masks
+[ERROR] cores are oversubscribed
+[ERROR] process imbalance detected across Packages
+Consult Linaro MAP's Thread Affinity Advisor dialog for more details.
+
