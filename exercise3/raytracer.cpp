@@ -120,9 +120,9 @@ void RayTracer::render(int rank, int size, std::vector<Color>& out_pixels) {
     }
 
     #ifdef NO_COLLAPSE
-    #pragma omp parallel for schedule(dynamic, 8)
+    #pragma omp parallel for //schedule(dynamic, 8)
     #else
-    #pragma omp parallel for collapse(2) schedule(dynamic, 8)
+    #pragma omp parallel for collapse(2) //schedule(dynamic, 8)
     #endif
     for (int y = start_row; y < end_row; ++y) {
         for (int x = 0; x < width; ++x) {
