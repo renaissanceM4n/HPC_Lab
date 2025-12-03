@@ -14,21 +14,11 @@ unset SLURM_EXPORT_ENV
 
 module load OpenMPI/4.1.6-GCC-13.2.0
 
-echo "Building snowman_collapse (with collapse(2))..."
-g++ -fopenmp main.cpp raytracer.cpp scene.cpp -o snowman_collapse
+# Clean and build
+make clean
+make
 
-echo "Building snowman_no_collapse (without collapse(2))..."
-cp raytracer.cpp raytracer.cpp.bak || exit 1
-
-sed -i 's/collapse(2)//' raytracer.cpp
-
-if g++ -fopenmp main.cpp raytracer.cpp scene.cpp -o snowman_no_collapse; then
-    echo "Build succeeded"
-else
-    echo "Build failed! Restoring raytracer.cpp..."
-fi
-
-mv raytracer.cpp.bak raytracer.cpp
+echo ""mv raytracer.cpp.bak raytracer.cpp
 echo "Build completed."
 echo ""
 export OMP_PROC_BIND=close

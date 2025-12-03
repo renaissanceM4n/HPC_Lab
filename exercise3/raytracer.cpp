@@ -119,7 +119,11 @@ void RayTracer::render(int rank, int size, std::vector<Color>& out_pixels) {
         snowflakes[i] = Vec3(x_rand, y_rand, z_rand);
     }
 
+    #ifdef NO_COLLAPSE
+    #pragma omp parallel for schedule(dynamic, 8)
+    #else
     #pragma omp parallel for collapse(2) schedule(dynamic, 8)
+    #endif
     for (int y = start_row; y < end_row; ++y) {
         for (int x = 0; x < width; ++x) {
             double ndc_x = (x + 0.5) / width;
