@@ -1,0 +1,246 @@
+rm -f main.o raytracer.o scene.o main.no_collapse.o raytracer.no_collapse.o scene.no_collapse.o snowman_collapse snowman_no_collapse
+mpiicpx -O3 -std=c++17 -qopenmp -xHost -c main.cpp -o main.o
+mpiicpx -O3 -std=c++17 -qopenmp -xHost -c raytracer.cpp -o raytracer.o
+mpiicpx -O3 -std=c++17 -qopenmp -xHost -c scene.cpp -o scene.o
+mpiicpx -O3 -std=c++17 -qopenmp -xHost -o snowman_collapse main.o raytracer.o scene.o
+mpiicpx -O3 -std=c++17 -qopenmp -xHost -DNO_COLLAPSE -c main.cpp -o main.no_collapse.o
+mpiicpx -O3 -std=c++17 -qopenmp -xHost -DNO_COLLAPSE -c raytracer.cpp -o raytracer.no_collapse.o
+mpiicpx -O3 -std=c++17 -qopenmp -xHost -DNO_COLLAPSE -c scene.cpp -o scene.no_collapse.o
+mpiicpx -O3 -std=c++17 -qopenmp -xHost -o snowman_no_collapse main.no_collapse.o raytracer.no_collapse.o scene.no_collapse.o
+
+Build completed.
+
+
+==========================================
+Test: 4 Processes × 3 Threads
+==========================================
+Running 4 Processes × 3 Threads (collapse)...
+[0] MPI startup(): Intel(R) MPI Library, Version 2021.10  Build 20230619 (id: c2e19c2f3e)
+[0] MPI startup(): Copyright (C) 2003-2023 Intel Corporation.  All rights reserved.
+[0] MPI startup(): library kind: release
+[0] MPI startup(): libfabric version: 1.18.0-impi
+[0] MPI startup(): libfabric provider: mlx
+[0] MPI startup(): File "/opt/software/easybuild-INTEL/software/impi/2021.10.0-intel-compilers-2023.2.1/mpi/2021.10.0/etc/tuning_spr_shm-ofi_mlx_200.dat" not found
+[0] MPI startup(): Load tuning file: "/opt/software/easybuild-INTEL/software/impi/2021.10.0-intel-compilers-2023.2.1/mpi/2021.10.0/etc/tuning_spr_shm-ofi.dat"
+[0] MPI startup(): Rank    Pid      Node name  Pin cpu
+[0] MPI startup(): 0       1031131  node162    {36,37,38}
+[0] MPI startup(): 1       1031132  node162    {39,40,41}
+[0] MPI startup(): 2       1031133  node162    {42,43,44}
+[0] MPI startup(): 3       1031134  node162    {45,46,47}
+[0] MPI startup(): I_MPI_ROOT=/opt/software/easybuild-INTEL/software/impi/2021.10.0-intel-compilers-2023.2.1/mpi/2021.10.0
+[0] MPI startup(): I_MPI_MPIRUN=mpirun
+[0] MPI startup(): I_MPI_BIND_WIN_ALLOCATE=localalloc
+[0] MPI startup(): I_MPI_HYDRA_BOOTSTRAP_EXEC_EXTRA_ARGS=--external-launcher
+[0] MPI startup(): I_MPI_HYDRA_TOPOLIB=hwloc
+[0] MPI startup(): I_MPI_HYDRA_BOOTSTRAP=slurm
+[0] MPI startup(): I_MPI_RETURN_WIN_MEM_NUMA=3
+[0] MPI startup(): I_MPI_PIN=on
+[0] MPI startup(): I_MPI_PIN_CELL=unit
+[0] MPI startup(): I_MPI_PIN_RESPECT_CPUSET=on
+[0] MPI startup(): I_MPI_PIN_RESPECT_HCA=on
+[0] MPI startup(): I_MPI_PIN_DOMAIN=omp:compact
+[0] MPI startup(): I_MPI_PIN_ORDER=compact
+[0] MPI startup(): I_MPI_INTERNAL_MEM_POLICY=default
+[0] MPI startup(): I_MPI_DEBUG=5
+Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 4
+Max Local Computation Time (across all ranks): 66.1058 seconds
+Min Local Computation Time (across all ranks): 53.2351 seconds
+Avg Local Computation Time (across all ranks): 59.639 seconds
+Running 4 Processes × 3 Threads (no_collapse)...
+[0] MPI startup(): Intel(R) MPI Library, Version 2021.10  Build 20230619 (id: c2e19c2f3e)
+[0] MPI startup(): Copyright (C) 2003-2023 Intel Corporation.  All rights reserved.
+[0] MPI startup(): library kind: release
+[0] MPI startup(): libfabric version: 1.18.0-impi
+[0] MPI startup(): libfabric provider: mlx
+[0] MPI startup(): File "/opt/software/easybuild-INTEL/software/impi/2021.10.0-intel-compilers-2023.2.1/mpi/2021.10.0/etc/tuning_spr_shm-ofi_mlx_200.dat" not found
+[0] MPI startup(): Load tuning file: "/opt/software/easybuild-INTEL/software/impi/2021.10.0-intel-compilers-2023.2.1/mpi/2021.10.0/etc/tuning_spr_shm-ofi.dat"
+[0] MPI startup(): Rank    Pid      Node name  Pin cpu
+[0] MPI startup(): 0       1031420  node162    {36,37,38}
+[0] MPI startup(): 1       1031421  node162    {39,40,41}
+[0] MPI startup(): 2       1031422  node162    {42,43,44}
+[0] MPI startup(): 3       1031423  node162    {45,46,47}
+[0] MPI startup(): I_MPI_ROOT=/opt/software/easybuild-INTEL/software/impi/2021.10.0-intel-compilers-2023.2.1/mpi/2021.10.0
+[0] MPI startup(): I_MPI_MPIRUN=mpirun
+[0] MPI startup(): I_MPI_BIND_WIN_ALLOCATE=localalloc
+[0] MPI startup(): I_MPI_HYDRA_BOOTSTRAP_EXEC_EXTRA_ARGS=--external-launcher
+[0] MPI startup(): I_MPI_HYDRA_TOPOLIB=hwloc
+[0] MPI startup(): I_MPI_HYDRA_BOOTSTRAP=slurm
+[0] MPI startup(): I_MPI_RETURN_WIN_MEM_NUMA=3
+[0] MPI startup(): I_MPI_PIN=on
+[0] MPI startup(): I_MPI_PIN_CELL=unit
+[0] MPI startup(): I_MPI_PIN_RESPECT_CPUSET=on
+[0] MPI startup(): I_MPI_PIN_RESPECT_HCA=on
+[0] MPI startup(): I_MPI_PIN_DOMAIN=omp:compact
+[0] MPI startup(): I_MPI_PIN_ORDER=compact
+[0] MPI startup(): I_MPI_INTERNAL_MEM_POLICY=default
+[0] MPI startup(): I_MPI_DEBUG=5
+Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 4
+Max Local Computation Time (across all ranks): 65.7329 seconds
+Min Local Computation Time (across all ranks): 55.0894 seconds
+Avg Local Computation Time (across all ranks): 59.9823 seconds
+
+==========================================
+Test: 12 Processes × 1 Threads
+==========================================
+Running 12 Processes × 1 Threads (collapse)...
+[0] MPI startup(): Intel(R) MPI Library, Version 2021.10  Build 20230619 (id: c2e19c2f3e)
+[0] MPI startup(): Copyright (C) 2003-2023 Intel Corporation.  All rights reserved.
+[0] MPI startup(): library kind: release
+[0] MPI startup(): libfabric version: 1.18.0-impi
+[0] MPI startup(): libfabric provider: mlx
+[0] MPI startup(): File "/opt/software/easybuild-INTEL/software/impi/2021.10.0-intel-compilers-2023.2.1/mpi/2021.10.0/etc/tuning_spr_shm-ofi_mlx_200.dat" not found
+[0] MPI startup(): Load tuning file: "/opt/software/easybuild-INTEL/software/impi/2021.10.0-intel-compilers-2023.2.1/mpi/2021.10.0/etc/tuning_spr_shm-ofi.dat"
+[0] MPI startup(): Rank    Pid      Node name  Pin cpu
+[0] MPI startup(): 0       1031720  node162    {36}
+[0] MPI startup(): 1       1031721  node162    {37}
+[0] MPI startup(): 2       1031722  node162    {38}
+[0] MPI startup(): 3       1031723  node162    {39}
+[0] MPI startup(): 4       1031724  node162    {40}
+[0] MPI startup(): 5       1031725  node162    {41}
+[0] MPI startup(): 6       1031726  node162    {42}
+[0] MPI startup(): 7       1031727  node162    {43}
+[0] MPI startup(): 8       1031728  node162    {44}
+[0] MPI startup(): 9       1031729  node162    {45}
+[0] MPI startup(): 10      1031730  node162    {46}
+[0] MPI startup(): 11      1031731  node162    {47}
+[0] MPI startup(): I_MPI_ROOT=/opt/software/easybuild-INTEL/software/impi/2021.10.0-intel-compilers-2023.2.1/mpi/2021.10.0
+[0] MPI startup(): I_MPI_MPIRUN=mpirun
+[0] MPI startup(): I_MPI_BIND_WIN_ALLOCATE=localalloc
+[0] MPI startup(): I_MPI_HYDRA_BOOTSTRAP_EXEC_EXTRA_ARGS=--external-launcher
+[0] MPI startup(): I_MPI_HYDRA_TOPOLIB=hwloc
+[0] MPI startup(): I_MPI_HYDRA_BOOTSTRAP=slurm
+[0] MPI startup(): I_MPI_RETURN_WIN_MEM_NUMA=3
+[0] MPI startup(): I_MPI_PIN=on
+[0] MPI startup(): I_MPI_PIN_CELL=unit
+[0] MPI startup(): I_MPI_PIN_RESPECT_CPUSET=on
+[0] MPI startup(): I_MPI_PIN_RESPECT_HCA=on
+[0] MPI startup(): I_MPI_PIN_DOMAIN=omp:compact
+[0] MPI startup(): I_MPI_PIN_ORDER=compact
+[0] MPI startup(): I_MPI_INTERNAL_MEM_POLICY=default
+[0] MPI startup(): I_MPI_DEBUG=5
+Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 12
+Max Local Computation Time (across all ranks): 65.6025 seconds
+Min Local Computation Time (across all ranks): 52.5067 seconds
+Avg Local Computation Time (across all ranks): 56.8964 seconds
+Running 12 Processes × 1 Threads (no_collapse)...
+[0] MPI startup(): Intel(R) MPI Library, Version 2021.10  Build 20230619 (id: c2e19c2f3e)
+[0] MPI startup(): Copyright (C) 2003-2023 Intel Corporation.  All rights reserved.
+[0] MPI startup(): library kind: release
+[0] MPI startup(): libfabric version: 1.18.0-impi
+[0] MPI startup(): libfabric provider: mlx
+[0] MPI startup(): File "/opt/software/easybuild-INTEL/software/impi/2021.10.0-intel-compilers-2023.2.1/mpi/2021.10.0/etc/tuning_spr_shm-ofi_mlx_200.dat" not found
+[0] MPI startup(): Load tuning file: "/opt/software/easybuild-INTEL/software/impi/2021.10.0-intel-compilers-2023.2.1/mpi/2021.10.0/etc/tuning_spr_shm-ofi.dat"
+[0] MPI startup(): Rank    Pid      Node name  Pin cpu
+[0] MPI startup(): 0       1032022  node162    {36}
+[0] MPI startup(): 1       1032023  node162    {37}
+[0] MPI startup(): 2       1032024  node162    {38}
+[0] MPI startup(): 3       1032025  node162    {39}
+[0] MPI startup(): 4       1032026  node162    {40}
+[0] MPI startup(): 5       1032027  node162    {41}
+[0] MPI startup(): 6       1032028  node162    {42}
+[0] MPI startup(): 7       1032029  node162    {43}
+[0] MPI startup(): 8       1032030  node162    {44}
+[0] MPI startup(): 9       1032031  node162    {45}
+[0] MPI startup(): 10      1032032  node162    {46}
+[0] MPI startup(): 11      1032033  node162    {47}
+[0] MPI startup(): I_MPI_ROOT=/opt/software/easybuild-INTEL/software/impi/2021.10.0-intel-compilers-2023.2.1/mpi/2021.10.0
+[0] MPI startup(): I_MPI_MPIRUN=mpirun
+[0] MPI startup(): I_MPI_BIND_WIN_ALLOCATE=localalloc
+[0] MPI startup(): I_MPI_HYDRA_BOOTSTRAP_EXEC_EXTRA_ARGS=--external-launcher
+[0] MPI startup(): I_MPI_HYDRA_TOPOLIB=hwloc
+[0] MPI startup(): I_MPI_HYDRA_BOOTSTRAP=slurm
+[0] MPI startup(): I_MPI_RETURN_WIN_MEM_NUMA=3
+[0] MPI startup(): I_MPI_PIN=on
+[0] MPI startup(): I_MPI_PIN_CELL=unit
+[0] MPI startup(): I_MPI_PIN_RESPECT_CPUSET=on
+[0] MPI startup(): I_MPI_PIN_RESPECT_HCA=on
+[0] MPI startup(): I_MPI_PIN_DOMAIN=omp:compact
+[0] MPI startup(): I_MPI_PIN_ORDER=compact
+[0] MPI startup(): I_MPI_INTERNAL_MEM_POLICY=default
+[0] MPI startup(): I_MPI_DEBUG=5
+Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 12
+Max Local Computation Time (across all ranks): 66.4937 seconds
+Min Local Computation Time (across all ranks): 53.3912 seconds
+Avg Local Computation Time (across all ranks): 57.7187 seconds
+
+==========================================
+Test: 1 Processes × 12 Threads
+==========================================
+Running 1 Processes × 12 Threads (collapse)...
+[0] MPI startup(): Intel(R) MPI Library, Version 2021.10  Build 20230619 (id: c2e19c2f3e)
+[0] MPI startup(): Copyright (C) 2003-2023 Intel Corporation.  All rights reserved.
+[0] MPI startup(): library kind: release
+[0] MPI startup(): libfabric version: 1.18.0-impi
+[0] MPI startup(): libfabric provider: mlx
+[0] MPI startup(): File "/opt/software/easybuild-INTEL/software/impi/2021.10.0-intel-compilers-2023.2.1/mpi/2021.10.0/etc/tuning_spr_shm-ofi_mlx_200.dat" not found
+[0] MPI startup(): Load tuning file: "/opt/software/easybuild-INTEL/software/impi/2021.10.0-intel-compilers-2023.2.1/mpi/2021.10.0/etc/tuning_spr_shm-ofi.dat"
+[0] MPI startup(): Rank    Pid      Node name  Pin cpu
+[0] MPI startup(): 0       1032319  node162    {36,37,38,39,40,41,42,43,44,45,46,47}
+[0] MPI startup(): I_MPI_ROOT=/opt/software/easybuild-INTEL/software/impi/2021.10.0-intel-compilers-2023.2.1/mpi/2021.10.0
+[0] MPI startup(): I_MPI_MPIRUN=mpirun
+[0] MPI startup(): I_MPI_BIND_WIN_ALLOCATE=localalloc
+[0] MPI startup(): I_MPI_HYDRA_BOOTSTRAP_EXEC_EXTRA_ARGS=--external-launcher
+[0] MPI startup(): I_MPI_HYDRA_TOPOLIB=hwloc
+[0] MPI startup(): I_MPI_HYDRA_BOOTSTRAP=slurm
+[0] MPI startup(): I_MPI_RETURN_WIN_MEM_NUMA=3
+[0] MPI startup(): I_MPI_PIN=on
+[0] MPI startup(): I_MPI_PIN_CELL=unit
+[0] MPI startup(): I_MPI_PIN_RESPECT_CPUSET=on
+[0] MPI startup(): I_MPI_PIN_RESPECT_HCA=on
+[0] MPI startup(): I_MPI_PIN_DOMAIN=omp:compact
+[0] MPI startup(): I_MPI_PIN_ORDER=compact
+[0] MPI startup(): I_MPI_INTERNAL_MEM_POLICY=default
+[0] MPI startup(): I_MPI_DEBUG=5
+Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 1
+Max Local Computation Time (across all ranks): 66.2883 seconds
+Min Local Computation Time (across all ranks): 66.2883 seconds
+Avg Local Computation Time (across all ranks): 66.2883 seconds
+Running 1 Processes × 12 Threads (no_collapse)...
+[0] MPI startup(): Intel(R) MPI Library, Version 2021.10  Build 20230619 (id: c2e19c2f3e)
+[0] MPI startup(): Copyright (C) 2003-2023 Intel Corporation.  All rights reserved.
+[0] MPI startup(): library kind: release
+[0] MPI startup(): libfabric version: 1.18.0-impi
+[0] MPI startup(): libfabric provider: mlx
+[0] MPI startup(): File "/opt/software/easybuild-INTEL/software/impi/2021.10.0-intel-compilers-2023.2.1/mpi/2021.10.0/etc/tuning_spr_shm-ofi_mlx_200.dat" not found
+[0] MPI startup(): Load tuning file: "/opt/software/easybuild-INTEL/software/impi/2021.10.0-intel-compilers-2023.2.1/mpi/2021.10.0/etc/tuning_spr_shm-ofi.dat"
+[0] MPI startup(): Rank    Pid      Node name  Pin cpu
+[0] MPI startup(): 0       1032606  node162    {36,37,38,39,40,41,42,43,44,45,46,47}
+[0] MPI startup(): I_MPI_ROOT=/opt/software/easybuild-INTEL/software/impi/2021.10.0-intel-compilers-2023.2.1/mpi/2021.10.0
+[0] MPI startup(): I_MPI_MPIRUN=mpirun
+[0] MPI startup(): I_MPI_BIND_WIN_ALLOCATE=localalloc
+[0] MPI startup(): I_MPI_HYDRA_BOOTSTRAP_EXEC_EXTRA_ARGS=--external-launcher
+[0] MPI startup(): I_MPI_HYDRA_TOPOLIB=hwloc
+[0] MPI startup(): I_MPI_HYDRA_BOOTSTRAP=slurm
+[0] MPI startup(): I_MPI_RETURN_WIN_MEM_NUMA=3
+[0] MPI startup(): I_MPI_PIN=on
+[0] MPI startup(): I_MPI_PIN_CELL=unit
+[0] MPI startup(): I_MPI_PIN_RESPECT_CPUSET=on
+[0] MPI startup(): I_MPI_PIN_RESPECT_HCA=on
+[0] MPI startup(): I_MPI_PIN_DOMAIN=omp:compact
+[0] MPI startup(): I_MPI_PIN_ORDER=compact
+[0] MPI startup(): I_MPI_INTERNAL_MEM_POLICY=default
+[0] MPI startup(): I_MPI_DEBUG=5
+Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 1
+Max Local Computation Time (across all ranks): 66.2783 seconds
+Min Local Computation Time (across all ranks): 66.2783 seconds
+Avg Local Computation Time (across all ranks): 66.2783 seconds
+
+Hybrid scaling tests completed.

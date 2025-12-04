@@ -1,0 +1,25 @@
+rm -f main.o raytracer.o scene.o main.no_collapse.o raytracer.no_collapse.o scene.no_collapse.o snowman_collapse snowman_no_collapse
+icpc -O3 -std=c++17 -qopenmp -xHost -cc=icpc -c main.cpp -o main.o
+icpc -O3 -std=c++17 -qopenmp -xHost -cc=icpc -c raytracer.cpp -o raytracer.o
+icpc -O3 -std=c++17 -qopenmp -xHost -cc=icpc -c scene.cpp -o scene.o
+icpc -O3 -std=c++17 -qopenmp -xHost -cc=icpc -o snowman_collapse main.o raytracer.o scene.o
+
+Build completed.
+
+
+==========================================
+Test: 4 Processes × 3 Threads
+==========================================
+Running 4 Processes × 3 Threads (collapse)...
+
+==========================================
+Test: 12 Processes × 1 Threads
+==========================================
+Running 12 Processes × 1 Threads (collapse)...
+
+==========================================
+Test: 1 Processes × 12 Threads
+==========================================
+Running 1 Processes × 12 Threads (collapse)...
+
+Hybrid scaling tests completed.
