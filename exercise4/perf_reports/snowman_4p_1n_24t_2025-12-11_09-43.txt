@@ -1,0 +1,78 @@
+Command:        mpirun -np 4 ./snowman 1024 4 8 8
+Resources:      1 node (96 physical, 96 logical cores per node)
+Memory:         1008 GiB per node
+Tasks:          4 processes, OMP_NUM_THREADS was 24
+Machine:        node107
+Architecture:   x86_64
+CPU Family:     sapphirerapids
+Start time:     Thu Dec 11 09:43:33 2025
+Total time:     63 seconds (about 1 minute)
+Full path:      /home/s13dpeit_hpc/Snowman/HPC_Lab/exercise4
+
+Summary: snowman is Compute-bound in this configuration
+Compute:                                     74.9%    (46.6s) |======|
+MPI:                                         25.1%    (15.6s) |==|
+I/O:                                          0.0%     (0.0s) |
+This application run was Compute-bound (based on main thread activity). A breakdown of this time and advice for investigating further is in the CPU section below.
+As little time is spent in MPI calls, this code may also benefit from running at larger scales.
+
+CPU:
+A breakdown of the 74.9% (46.6s) CPU time:
+Single-core code:                            <0.1%     (0.0s) ||
+OpenMP regions:                             100.0%    (46.6s) |=========|
+Scalar numeric ops:                          10.7%     (5.0s) ||
+Vector numeric ops:                           3.6%     (1.7s) ||
+Memory accesses:                             51.5%    (24.0s) |====|
+The per-core performance is memory-bound. Use a profiler to identify time-consuming loops and check their cache performance.
+Little time is spent in vectorized instructions. Check the compiler's vectorization advice to see why key loops could not be vectorized.
+
+MPI:
+A breakdown of the 25.1% (15.6s) MPI time:
+Time in collective calls:                     0.5%     (0.1s) ||
+Time in point-to-point calls:                99.5%    (15.5s) |=========|
+Effective process collective rate:             827 bytes/s
+Effective process point-to-point rate:         123 kB/s
+Most of the time is spent in point-to-point calls with a very low transfer rate. This suggests load imbalance is causing synchronization overhead; use an MPI profiler to investigate.
+
+I/O:
+A breakdown of the 0.0% (0.0s) I/O time:
+Time in reads:                                0.0%     (0.0s) |
+Time in writes:                               0.0%     (0.0s) |
+Effective process read rate:                  0.00 bytes/s
+Effective process write rate:                 0.00 bytes/s
+No time is spent in I/O operations. There's nothing to optimize here!
+
+OpenMP:
+A breakdown of the 100.0% (46.6s) time in OpenMP regions:
+Computation:                                 80.6%    (37.5s) |=======|
+Synchronization:                             19.4%     (9.0s) |=|
+Physical core utilization:                   76.0%            |=======|
+System load:                                 76.1%            |=======|
+OpenMP thread performance looks good. Check the CPU breakdown for advice on improving code efficiency.
+
+Memory:
+Per-process memory usage may also affect scaling:
+Mean process memory usage:                     247 MiB
+Peak process memory usage:                     309 MiB
+Peak node memory usage:                       0.0%            |
+Node memory usage metrics:
+
+Energy:
+A breakdown of how energy was used:
+CPU:                                      not supported
+System:                                   not supported
+Mean node power:                          not supported
+Peak node power:                              0.00 W
+Energy metrics are not available on this system.
+CPU metrics: Error reading /sys/class/powercap/intel-rapl:0/energy_uj: Permission denied
+
+Thread Affinity:
+A breakdown of how software threads have been pinned to logical cores (1 per physical core).
+Mean utilization:                           100.0%            |=========|
+Max load:                                     2.00 
+Migration opportunity:                        2.49 
+[ERROR] detected compute threads with overlapping affinity masks
+[ERROR] cores are oversubscribed
+[ERROR] at least one process spans multiple NUMA nodes
+Consult Linaro MAP's Thread Affinity Advisor dialog for more details.
+
