@@ -1,0 +1,7 @@
+rm -f main.o raytracer.o scene.o snowman
+mpic++ -O3 -std=c++17 -g -c main.cpp -o main.o
+mpic++ -O3 -std=c++17 -g -c raytracer.cpp -o raytracer.o
+mpic++ -O3 -std=c++17 -g -c scene.cpp -o scene.o
+mpic++ -O3 -std=c++17 -g -o snowman main.o raytracer.o scene.o
+Waiting for licence
+Usage: ./snowman <image_size> <num_snowmen> <tile_size>
