@@ -17,6 +17,7 @@
 #include <vector>
 #include <string>
 #include <chrono>
+#include <thread>
 #include <cstring>
 #include "raytracer.hpp"
 #include "scene.hpp"
@@ -98,39 +99,48 @@ int main(int argc, char* argv[]) {
             int tiles_received = 0;
             while (tiles_received < num_tiles) {
                 MPI_Status status;
-                int header[3]; // tile_id, w, h
-                MPI_Recv(header, 3, MPI_INT, MPI_ANY_SOURCE, 4, MPI_COMM_WORLD, &status);
-                int src = status.MPI_SOURCE;
-                int tile_id = header[0];
-                int w = header[1];
-                int h = header[2];
-                int bufsize = w * h * 3;
-                std::vector<unsigned char> buf(bufsize);
-                MPI_Recv(buf.data(), bufsize, MPI_UNSIGNED_CHAR, src, 5, MPI_COMM_WORLD, &status);
-                // receive elapsed time for this tile
-                double elapsed = 0.0;
-                MPI_Recv(&elapsed, 1, MPI_DOUBLE, src, 6, MPI_COMM_WORLD, &status);
+                int flag = 0;
+                
+                // Non-blocking probe for available results
+                MPI_Iprobe(MPI_ANY_SOURCE, 4, MPI_COMM_WORLD, &flag, &status);
+                
+                if (flag) {
+                    // Tile result is available, receive it
+                    int header[3]; // tile_id, w, h
+                    MPI_Recv(header, 3, MPI_INT, status.MPI_SOURCE, 4, MPI_COMM_WORLD, &status);
+                    int src = status.MPI_SOURCE;
+                    int tile_id = header[0];
+                    int w = header[1];
+                    int h = header[2];
+                    int bufsize = w * h * 3;
+                    std::vector<unsigned char> buf(bufsize);
+                    MPI_Recv(buf.data(), bufsize, MPI_UNSIGNED_CHAR, src, 5, MPI_COMM_WORLD, &status);
+                    // receive elapsed time for this tile
+                    double elapsed = 0.0;
+                    MPI_Recv(&elapsed, 1, MPI_DOUBLE, src, 6, MPI_COMM_WORLD, &status);
 
-                // place buffer into full_buf at correct offset
-                Tile t = tiles[tile_id];
-                for (int row = 0; row < t.h; ++row) {
-                    int dest_row = t.y0 + row;
-                    int dest_off = (dest_row * image_size + t.x0) * 3;
-                    int src_off = row * t.w * 3;
-                    std::memcpy(&full_buf[dest_off], &buf[src_off], t.w * 3);
-                }
+                    // place buffer into full_buf at correct offset
+                    Tile t = tiles[tile_id];
+                    for (int row = 0; row < t.h; ++row) {
+                        int dest_row = t.y0 + row;
+                        int dest_off = (dest_row * image_size + t.x0) * 3;
+                        int src_off = row * t.w * 3;
+                        std::memcpy(&full_buf[dest_off], &buf[src_off], t.w * 3);
+                    }
 
-                ++tiles_received;
+                    ++tiles_received;
 
-                // (elapsed time received; master does not aggregate per-worker here)
-
-                // send next tile to this worker or done
-                if (next_tile < num_tiles) {
-                    int meta[5] = {tiles[next_tile].id, tiles[next_tile].x0, tiles[next_tile].y0, tiles[next_tile].w, tiles[next_tile].h};
-                    MPI_Send(meta, 5, MPI_INT, src, 1, MPI_COMM_WORLD);
-                    ++next_tile;
+                    // send next tile to this worker or done
+                    if (next_tile < num_tiles) {
+                        int meta[5] = {tiles[next_tile].id, tiles[next_tile].x0, tiles[next_tile].y0, tiles[next_tile].w, tiles[next_tile].h};
+                        MPI_Send(meta, 5, MPI_INT, src, 1, MPI_COMM_WORLD);
+                        ++next_tile;
+                    } else {
+                        MPI_Send(nullptr, 0, MPI_INT, src, 2, MPI_COMM_WORLD);
+                    }
                 } else {
-                    MPI_Send(nullptr, 0, MPI_INT, src, 2, MPI_COMM_WORLD);
+                    // No tile result available yet - brief sleep to avoid busy-waiting
+                    std::this_thread::sleep_for(std::chrono::microseconds(10));
                 }
             }
 
