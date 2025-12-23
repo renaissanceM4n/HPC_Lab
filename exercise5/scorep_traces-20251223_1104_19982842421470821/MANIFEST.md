@@ -6,7 +6,6 @@ The result directory of this measurement should contain the following files:
 
       * `MANIFEST.md`           This manifest file.
       * `scorep.cfg`            Listing of used environment variables.
-      * `scorep.filter`         Copy of the applied filter file.
 
    2. Files that will be created by subsystems of the measurement core:
 
@@ -27,6 +26,4 @@ The complete list of Score-P variables used, incl. current default values,
 can be found in `scorep.cfg`.
 
     SCOREP_ENABLE_TRACING
-    SCOREP_TOTAL_MEMORY
     SCOREP_EXPERIMENT_DIRECTORY
-    SCOREP_FILTERING_FILE
