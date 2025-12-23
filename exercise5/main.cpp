@@ -182,8 +182,8 @@ int main(int argc, char* argv[]) {
                 // accumulate local compute time for this worker
                 local_compute_time += elapsed;
 
-                // lightweight instrumentation to stderr
-                std::cerr << "Rank " << rank << " rendered tile " << tile_id << " (" << w << "x" << h << ") in " << elapsed << " s\n";
+                // lightweight instrumentation to stderr (disabled to avoid huge .err files)
+                // std::cerr << "Rank " << rank << " rendered tile " << tile_id << " (" << w << "x" << h << ") in " << elapsed << " s\n";
             }
         }
     }

@@ -1,13 +1,13 @@
 #!/bin/bash
-#SBATCH --job-name=profile_scaling
+#SBATCH --job-name=vampir_test
 #SBATCH --account=tmp_hpca_workshop
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=96
 #SBATCH --cpus-per-task=1
 #SBATCH --time=00:30:00
 #SBATCH --partition=intelsr_devel
-#SBATCH --output=profile_scaling_%j.out
-#SBATCH --error=profile_scaling_%j.err
+#SBATCH --output=vampir_test_%j.out
+#SBATCH --error=vampir_test_%j.err
 #SBATCH --exclusive
 
 # --- Environment setup ---
@@ -23,4 +23,7 @@ module load Score-P/8.4-gompi-2024a-CUDA-12.6.0
 make clean
 make
 
+# --- Run with Score-P tracing (generates OTF2 files) ---
+export SCOREP_EXPERIMENT_DIRECTORY=scorep_traces
+export SCOREP_ENABLE_TRACING=1
 mpirun -n 8 ./snowman 1024 4 1

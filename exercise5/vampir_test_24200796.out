@@ -1,0 +1,22 @@
+rm -f main.o raytracer.o scene.o snowman
+scorep --instrument-filter=scorep.filt mpic++ -O3 -std=c++17 -g -c main.cpp -o main.o
+scorep --instrument-filter=scorep.filt mpic++ -O3 -std=c++17 -g -c raytracer.cpp -o raytracer.o
+scorep --instrument-filter=scorep.filt mpic++ -O3 -std=c++17 -g -c scene.cpp -o scene.o
+scorep --instrument-filter=scorep.filt mpic++ -O3 -std=c++17 -g -o snowman main.o raytracer.o scene.o
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 8
+Max Local Computation Time (across all ranks): 533.873 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 467.132 seconds
+
+--- Per-Rank Computation Time ---
+Rank 0: 0 seconds
+Rank 1: 533.856 seconds
+Rank 2: 533.871 seconds
+Rank 3: 533.866 seconds
+Rank 4: 533.873 seconds
+Rank 5: 533.865 seconds
+Rank 6: 533.868 seconds
+Rank 7: 533.86 seconds
