@@ -1,5 +1,5 @@
 # Compiler and flags
-CXX = mpic++
+CXX = scorep --instrument-filter=scorep.filt mpic++
 CXXFLAGS = -O3 -std=c++17 -g
 
 # Source files

@@ -1,0 +1,133 @@
+rm -f main.o raytracer.o scene.o snowman
+mpic++ -O3 -std=c++17 -g -c main.cpp -o main.o
+mpic++ -O3 -std=c++17 -g -c raytracer.cpp -o raytracer.o
+mpic++ -O3 -std=c++17 -g -c scene.cpp -o scene.o
+mpic++ -O3 -std=c++17 -g -o snowman main.o raytracer.o scene.o
+Starting Weak Scaling Tests...
+Running test with 1 processes...
+Single-rank render time: 11.1908 s
+Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 128, Num Snowmen: 4, MPI Processes: 1
+Max Local Computation Time (across all ranks): 11.1908 seconds
+Min Local Computation Time (across all ranks): 11.1908 seconds
+Avg Local Computation Time (across all ranks): 11.1908 seconds
+
+--- Per-Rank Computation Time ---
+Rank 0: 11.1908 seconds
+Running test with 4 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 256, Num Snowmen: 4, MPI Processes: 4
+Max Local Computation Time (across all ranks): 77.7055 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 58.2775 seconds
+
+--- Per-Rank Computation Time ---
+Rank 0: 0 seconds
+Rank 1: 77.7035 seconds
+Rank 2: 77.7055 seconds
+Rank 3: 77.7011 seconds
+Running test with 16 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 512, Num Snowmen: 4, MPI Processes: 16
+Max Local Computation Time (across all ranks): 62.3712 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 58.468 seconds
+
+--- Per-Rank Computation Time ---
+Rank 0: 0 seconds
+Rank 1: 62.3712 seconds
+Rank 2: 62.3645 seconds
+Rank 3: 62.359 seconds
+Rank 4: 62.3633 seconds
+Rank 5: 62.3593 seconds
+Rank 6: 62.3674 seconds
+Rank 7: 62.368 seconds
+Rank 8: 62.3676 seconds
+Rank 9: 62.3669 seconds
+Rank 10: 62.3687 seconds
+Rank 11: 62.3642 seconds
+Rank 12: 62.3632 seconds
+Rank 13: 62.3627 seconds
+Rank 14: 62.3711 seconds
+Rank 15: 62.3708 seconds
+Running test with 64 processes...
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 64
+Max Local Computation Time (across all ranks): 59.6529 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 58.7076 seconds
+
+--- Per-Rank Computation Time ---
+Rank 0: 0 seconds
+Rank 1: 59.6498 seconds
+Rank 2: 59.6504 seconds
+Rank 3: 59.6401 seconds
+Rank 4: 59.6435 seconds
+Rank 5: 59.6378 seconds
+Rank 6: 59.6494 seconds
+Rank 7: 59.6477 seconds
+Rank 8: 59.6491 seconds
+Rank 9: 59.6326 seconds
+Rank 10: 59.6218 seconds
+Rank 11: 59.6455 seconds
+Rank 12: 59.6409 seconds
+Rank 13: 59.6156 seconds
+Rank 14: 59.6459 seconds
+Rank 15: 59.6439 seconds
+Rank 16: 59.6375 seconds
+Rank 17: 59.6148 seconds
+Rank 18: 59.6471 seconds
+Rank 19: 59.6423 seconds
+Rank 20: 59.6421 seconds
+Rank 21: 59.6441 seconds
+Rank 22: 59.615 seconds
+Rank 23: 59.6465 seconds
+Rank 24: 59.6488 seconds
+Rank 25: 59.6479 seconds
+Rank 26: 59.6426 seconds
+Rank 27: 59.6285 seconds
+Rank 28: 59.6457 seconds
+Rank 29: 59.649 seconds
+Rank 30: 59.605 seconds
+Rank 31: 59.6415 seconds
+Rank 32: 59.6529 seconds
+Rank 33: 59.6466 seconds
+Rank 34: 59.6323 seconds
+Rank 35: 59.6441 seconds
+Rank 36: 59.6485 seconds
+Rank 37: 59.6094 seconds
+Rank 38: 59.6436 seconds
+Rank 39: 59.6431 seconds
+Rank 40: 59.6484 seconds
+Rank 41: 59.6472 seconds
+Rank 42: 59.6405 seconds
+Rank 43: 59.6423 seconds
+Rank 44: 59.6017 seconds
+Rank 45: 59.647 seconds
+Rank 46: 59.613 seconds
+Rank 47: 59.6414 seconds
+Rank 48: 59.6446 seconds
+Rank 49: 59.6444 seconds
+Rank 50: 59.6465 seconds
+Rank 51: 59.6335 seconds
+Rank 52: 59.6459 seconds
+Rank 53: 59.6097 seconds
+Rank 54: 59.6463 seconds
+Rank 55: 59.644 seconds
+Rank 56: 59.6514 seconds
+Rank 57: 59.6421 seconds
+Rank 58: 59.645 seconds
+Rank 59: 59.6279 seconds
+Rank 60: 59.6484 seconds
+Rank 61: 59.6418 seconds
+Rank 62: 59.6488 seconds
+Rank 63: 59.6517 seconds
+Weak scaling tests completed.

@@ -22,4 +22,4 @@ module load LinaroForge/25.0.3-GCCcore-13.2.0-linux-x86_64
 make clean
 make
 
-map --profile mpirun -n 48 ./snowman
+map --profile mpirun -n 48 ./snowman 1024 4 1

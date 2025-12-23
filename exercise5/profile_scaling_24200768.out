@@ -1,0 +1,63 @@
+rm -f main.o raytracer.o scene.o snowman
+mpic++ -O3 -std=c++17 -g -c main.cpp -o main.o
+mpic++ -O3 -std=c++17 -g -c raytracer.cpp -o raytracer.o
+mpic++ -O3 -std=c++17 -g -c scene.cpp -o scene.o
+mpic++ -O3 -std=c++17 -g -o snowman main.o raytracer.o scene.o
+Waiting for licence
+Master: Image saved to output.ppm
+
+--- Computational Performance Metrics ---
+Image Size: 1024, Num Snowmen: 4, MPI Processes: 48
+Max Local Computation Time (across all ranks): 79.9051 seconds
+Min Local Computation Time (across all ranks): 0 seconds
+Avg Local Computation Time (across all ranks): 78.2308 seconds
+
+--- Per-Rank Computation Time ---
+Rank 0: 0 seconds
+Rank 1: 79.8948 seconds
+Rank 2: 79.8984 seconds
+Rank 3: 79.8957 seconds
+Rank 4: 79.8851 seconds
+Rank 5: 79.8962 seconds
+Rank 6: 79.9002 seconds
+Rank 7: 79.8954 seconds
+Rank 8: 79.9021 seconds
+Rank 9: 79.9008 seconds
+Rank 10: 79.9026 seconds
+Rank 11: 79.8871 seconds
+Rank 12: 79.8909 seconds
+Rank 13: 79.8902 seconds
+Rank 14: 79.8979 seconds
+Rank 15: 79.8922 seconds
+Rank 16: 79.8925 seconds
+Rank 17: 79.8971 seconds
+Rank 18: 79.9009 seconds
+Rank 19: 79.9039 seconds
+Rank 20: 79.8878 seconds
+Rank 21: 79.8971 seconds
+Rank 22: 79.8866 seconds
+Rank 23: 79.8856 seconds
+Rank 24: 79.9004 seconds
+Rank 25: 79.9016 seconds
+Rank 26: 79.8958 seconds
+Rank 27: 79.8934 seconds
+Rank 28: 79.8922 seconds
+Rank 29: 79.893 seconds
+Rank 30: 79.8941 seconds
+Rank 31: 79.8941 seconds
+Rank 32: 79.8987 seconds
+Rank 33: 79.899 seconds
+Rank 34: 79.893 seconds
+Rank 35: 79.8965 seconds
+Rank 36: 79.8907 seconds
+Rank 37: 79.8947 seconds
+Rank 38: 79.8889 seconds
+Rank 39: 79.8946 seconds
+Rank 40: 79.9051 seconds
+Rank 41: 79.9018 seconds
+Rank 42: 79.8969 seconds
+Rank 43: 79.8967 seconds
+Rank 44: 79.8917 seconds
+Rank 45: 79.8959 seconds
+Rank 46: 79.8951 seconds
+Rank 47: 79.8953 seconds
