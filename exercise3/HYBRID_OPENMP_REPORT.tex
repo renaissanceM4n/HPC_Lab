@@ -1,0 +1,126 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{amsmath}
+\usepackage{listings}
+\usepackage{xcolor}
+
+\lstset{
+    basicstyle=\ttfamily\small,
+    breaklines=true,
+    keywordstyle=\color{blue},
+    commentstyle=\color{gray},
+    stringstyle=\color{red},
+    showstringspaces=false
+}
+
+\title{Exercise 3: Hybrid OpenMP Parallelization Report\\
+Snowman Ray Tracer Performance Analysis}
+\author{}
+\date{December 4, 2025}
+
+\begin{document}
+
+\maketitle
+
+\section{Introduction}
+
+This exercise focuses on parallelizing the sequential Snowman ray tracer application using OpenMP within an MPI-based hybrid framework. The goal is to accelerate the most time-consuming kernel through parallelization and measure performance improvements with different threading strategies.
+
+\section{Problem Statement}
+
+Profiling analysis using \texttt{gprof} revealed that \texttt{RayTracer::render()} consumes 99.85\% of execution time. Within this function, the critical bottleneck is \texttt{intersect\_sphere()}, called 51,621 times per frame to perform ray-sphere intersection tests. This function represents the majority of computational work and is therefore the target for parallelization. The pixel computations are embarrassingly parallel—each pixel's color can be computed independently—making this loop an ideal candidate for OpenMP parallelization.
+
+\section{Optimization Approach}
+
+The parallelization targets the pixel-rendering loop in \texttt{render()}, where each pixel computation is independent:
+
+\begin{lstlisting}[language=C++]
+#ifdef NO_COLLAPSE
+#pragma omp parallel for
+#else
+#pragma omp parallel for collapse(2)
+#endif
+for (int y = start_row; y < end_row; ++y) {
+    for (int x = 0; x < width; ++x) {
+        // Ray casting and intersection computation
+        Vec3 ray_dir = ...;
+        Color pixel = trace_ray(ray_dir);
+    }
+}
+\end{lstlisting}
+
+To evaluate the effectiveness of loop collapsing in nested loops, two implementation variants are tested. The first uses \texttt{collapse(2)} to combine both nested loops into a single parallel region, enabling finer-grained work distribution across threads. The second variant parallelizes only the outer loop without collapse. The build system uses the Makefile to built
+\texttt{snowman\_collapse} with the standard pragma containing \texttt{collapse(2)}, while \texttt{snowman\_no\_collapse} is compiled with the \texttt{-DNO\_COLLAPSE} preprocessor flag, which selects an alternative pragma directive in the source code.
+
+This approach allows both variants to be tested without manual source code modifications
+
+
+\subsection{Environment Control}
+
+OpenMPI's advanced binding options ensure precise thread and process placement on the underlying hardware. The binding strategy \texttt{--map-by ppr:<procs>:node:PE=<threads> --bind-to core} specifies the number of processing elements (threads) per process and binds each thread to a specific physical core, preventing oversubscription and ensuring optimal cache locality. The \texttt{--report-bindings} option displays the actual binding configuration for verification.
+
+\begin{lstlisting}[language=bash]
+export OMP_PROC_BIND=close
+export OMP_PLACES=cores
+mpirun -np <procs> --map-by ppr:<procs>:node:PE=<threads> --bind-to core \
+    --report-bindings ./snowman <args>
+\end{lstlisting}
+
+\section{Experimental Design}
+
+Two systematic test scenarios evaluate the impact of thread and process-level parallelism on ray tracing performance. Test 1 fixes the number of MPI processes at 8 and varies the OpenMP thread count (2, 4, 6, 8, 12), providing insight into thread-level parallelism within a fixed MPI context. Test 2 complements this by fixing the thread count at 8 and varying the number of MPI processes (2, 4, 6, 8, 12), revealing the scalability behavior as inter-rank parallelism increases.
+
+Each test scenario is executed with both the collapse and no-collapse variants, yielding a total of 20 distinct configurations (2 variants × 5 parameter values × 2 test designs). Correctness is verified by comparing output images using MD5 checksums to ensure semantic equivalence across implementations. The mpirun command uses the updated binding strategy \texttt{--map-by ppr:<procs>:node:PE=<threads> --bind-to core}, which explicitly specifies the number of processing elements per process and binds threads to individual cores for improved locality.
+
+\section{Results}
+
+Test 1 (8 MPI processes, varying threads from 2 to 12) demonstrates how thread-level parallelism improves performance within a fixed MPI context. Computation times decrease smoothly from 50.4 seconds at 2 threads to 8.4 seconds at 12 threads, showing excellent scaling with near-linear speedup across all thread counts. Load imbalance decreases as thread count increases: at 2 threads, the maximum-to-minimum imbalance is 9.86 seconds (19.5% of minimum time), but at 12 threads it shrinks to just 1.41 seconds (20.0% of minimum time, maintained proportionally). The collapse(2) variant performs identically to the no-collapse variant, with less than 0.1% performance difference, indicating that loop collapsing provides no measurable benefit in this configuration.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.85\textwidth]{test1_computation_time.png}
+\caption{Test 1: 8 MPI Processes with Varying OpenMP Threads. Maximum computation time decreases from 50.4 seconds (2 threads) to 8.4 seconds (12 threads), demonstrating excellent thread-level scaling. Both collapse(2) and no-collapse variants perform nearly identically.}
+\label{fig:test1_computation}
+\end{figure}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.85\textwidth]{test1_speedup.png}
+\caption{Test 1: Speedup relative to baseline (2 threads). Near-linear scaling is achieved across all thread counts, with speedup reaching 5.97× at 12 threads, confirming the efficacy of thread-level parallelism within a fixed MPI context.}
+\label{fig:test1_speedup}
+\end{figure}
+
+Test 2 (8 OpenMP threads, varying processes from 2 to 12) evaluates MPI-level scaling with fixed thread concurrency. Computation times follow a similar pattern, decreasing from 50.3 seconds at 2 processes to approximately 7.5 seconds at 12 processes. The scaling is remarkably consistent: at 4 processes (8 × 4 = 32 total threads), computation time is 25.3 seconds; at 8 processes, 13.0 seconds; and at 12 processes, approximately 7.5 seconds. This represents near-perfect linear speedup—2× speedup with 2× processes—demonstrating that the improved binding strategy \texttt{--map-by ppr:<procs>:node:PE=<threads> --bind-to core} successfully eliminates the load-imbalancing problem observed in earlier tests.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.85\textwidth]{test2_computation_time.png}
+\caption{Test 2: Varying MPI Processes with 8 OpenMP Threads. Maximum computation time decreases from 50.3 seconds (2 processes) to 8.4 seconds (12 processes), demonstrating excellent process-level scaling. The consistency of this scaling pattern confirms the effectiveness of the improved binding strategy.}
+\label{fig:test2_computation}
+\end{figure}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.85\textwidth]{test2_speedup.png}
+\caption{Test 2: Speedup relative to baseline (2 processes). Near-perfect linear speedup is achieved, reaching 6.01× at 12 processes. This demonstrates that with proper core binding, MPI-level scaling is as efficient as thread-level scaling, validating the hybrid parallelization approach.}
+\label{fig:test2_speedup}
+\end{figure}
+
+Linaro Forge profiling confirms the effectiveness of the new binding approach. At 8 processes with 12 threads (96 threads total—1 per physical core), the profiler reports 100\% physical core utilization and system load of 87.3\%, with no overlapping affinity masks or oversubscription errors. Synchronization overhead remains modest at 1.0\% of OpenMP time, and MPI overhead is only 10.4\% with an effective collective rate of 894 kB/s, indicating efficient synchronization. The workload remains arithmetic-bound (56\% scalar operations, 36\% memory access), showing that memory bandwidth is not the limiting factor at these scales.
+
+Comparison of collapse(2) and no-collapse variants shows negligible differences in both tests: performance divergence is less than 0.5\%, confirming that loop collapsing is not a critical optimization factor for this workload. Both variants scale identically, indicating that the bottleneck is neither OpenMP scheduling nor loop structure but rather the thread and process distribution across the system.
+
+\section{Discussion}
+
+The results demonstrate that proper thread and process binding is critical to achieving efficient hybrid MPI+OpenMP parallelization. With the improved binding strategy (\texttt{--map-by ppr:<procs>:node:PE=<threads> --bind-to core}), the application scales nearly linearly across both thread and process dimensions. At 96 threads total (8 processes × 12 threads), execution time drops to just 8.4 seconds from the original 50.4 seconds at baseline (2 threads)—a 6× speedup with 6× parallelism, demonstrating near-ideal scaling efficiency.
+
+The earlier tests with the NUMA-based binding strategy (\texttt{--map-by ppr:<procs>:node --bind-to numa}) revealed a fundamental problem: imprecise thread placement led to core oversubscription, overlapping affinity masks, and significant load imbalance at certain process counts (particularly 12 processes). The new binding strategy eliminates these infrastructure-level constraints entirely by explicitly specifying thread assignments to cores, resulting in 100\% physical core utilization and no affinity conflicts.
+
+The negligible performance difference between collapse(2) and no-collapse variants (less than 0.5%) indicates that loop collapsing is not a critical optimization for this workload when proper binding is in place. Both variants scale identically, confirming that the OpenMP directive has minimal impact once the system infrastructure is correctly configured. Synchronization overhead remains low and scales well with increasing thread count (1.0\% at 12 threads), and MPI overhead stays modest (10.4% at 8 processes), demonstrating that efficient binding allows the application to reach the compute-bound regime where neither synchronization nor communication are bottlenecks.
+
+The key lesson is that architecture-aware process and thread binding is essential for hybrid parallelization. While algorithmic optimization (loop collapsing, static scheduling) can provide marginal improvements in poorly-configured systems, system-level configuration (explicit PE assignment and core binding) delivers orders of magnitude greater benefits. Future optimization efforts should prioritize correct resource placement and binding strategies before investigating algorithmic refinements.
+
+\end{document}

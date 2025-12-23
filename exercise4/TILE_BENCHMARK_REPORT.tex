@@ -1,0 +1,166 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{amsmath}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{multirow}
+
+\lstset{
+    basicstyle=\ttfamily\small,
+    breaklines=true,
+    keywordstyle=\color{blue},
+    commentstyle=\color{gray},
+    stringstyle=\color{red},
+    showstringspaces=false
+}
+
+\title{Exercise 4: Tile Decomposition and Hybrid Scaling}
+\author{David Peitz}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\section{Introduction}
+
+This exercise investigates tile decomposition and hybrid parallelization strategies for optimizing the Snowman ray tracer on 96-core systems. Exercise 2 established a baseline with pure MPI dynamic task scheduling, achieving $\sim 8$ seconds at 96 cores. Building on Exercise 3's demonstration that proper core binding enables near-perfect scaling, this work explores whether hybrid MPI+OpenMP configurations can match or improve upon the pure MPI dynamic approach by systematically varying three key parameters: tile size, thread count per process, and process count. The goal is to identify the optimal hybrid configuration that balances synchronization overhead, load balancing, and core utilization, determining whether OpenMP thread-level parallelism offers practical advantages over the proven dynamic MPI strategy on multi-core architectures.
+
+\section{Problem Statement}
+
+Tile size likely impacts performance in hybrid configurations, as small tiles may introduce synchronization overhead through frequent thread barriers, while large tiles could cause load imbalance. Therefore, it is unclear whether adding OpenMP threads provides benefits over pure MPI, or whether the overhead of thread synchronization outweighs gains from shared-memory parallelism. Process and thread binding with Intel MPI settings should help minimize remote memory access costs. 
+
+Performance profiling via \texttt{gprof} reveals that the primary performance bottleneck is the \texttt{RayTracer::renderTile()} function, which accounts for 99.04\% of total execution time. This function performs pixel rendering by casting rays and testing intersection against all scene objects. The computational workload varies across the image: pixels within or near snowmen objects perform more intensive collision detection than background pixels, creating potential load imbalance across tiles.
+
+In this report the evaluation of six tile sizes and varying process-thread configurations are shown to explore these questions.
+
+\section{Optimization Approach}
+
+Proper core binding is essential for achieving optimal performance. The script uses OpenMP binding with $\texttt{OMP\_PROC\_BIND=close}$ and $\texttt{OMP\_PLACES=cores}$, combined with Intel MPI pinning $\texttt{I\_MPI\_PIN\_DOMAIN=omp}$. This ensures that OpenMP threads remain in the same NUMA domain as their parent MPI process, minimizing remote memory access costs. 
+
+Two representative examples illustrate the core binding strategy:
+
+\textbf{Example 1: 4 Processes $\times$ 4 Threads (minimal configuration).} MPI rank bindings show compact placement from Exercise 4 hybrid scaling benchmark:
+
+\begin{lstlisting}[language=bash]
+Rank 0: {36,37,38,39}
+Rank 1: {40,41,42,43}
+Rank 2: {44,45,46,47}
+Rank 3: {0,1,2,3}
+\end{lstlisting}
+
+Each process occupies exactly 4 consecutive cores with Intel MPI pinning strategy.
+
+\textbf{Example 2: 24 Processes $\times$ 4 Threads (full-node configuration).} With maximum process count, all 96 cores are utilized across both sockets:
+
+\begin{lstlisting}[language=bash]
+Rank 0-3:   {36-39}, {40-43}, {44-47}, {0-3}
+Rank 4-7:   {4-7}, {8-11}, {12-15}, {16-19}
+Rank 8-11:  {20-23}, {24-27}, {28-31}, {32-35}
+Rank 12-15: {48-51}, {52-55}, {56-59}, {60-63}
+Rank 16-19: {64-67}, {68-71}, {72-75}, {76-79}
+Rank 20-23: {80-83}, {84-87}, {88-91}, {92-95}
+\end{lstlisting}
+
+At 24 processes with 4 threads each, Intel MPI's compact pinning distributes ranks to maximize core utilization across both sockets (cores 0-47 on socket 0, cores 48-95 on socket 1). This binding strategy ensures that each of the 24 MPI processes maintains thread locality within its assigned core range.
+
+\section{Results}
+
+Three hybrid configurations are evaluated with 4 MPI processes fixed and thread counts varying: 3 threads (12 cores total), 12 threads (48 cores), and 24 threads (96 cores). For each configuration, six tile sizes are benchmarked, providing 18 total measurements.
+
+Ranking tile sizes by average efficiency across all configurations reveals the following: $128 \times 128$ ($1.01 \times$, optimal), $64 \times 64$ ($1.03 \times$), $256 \times 256$ ($1.10 \times$), $32 \times 32$ ($1.22 \times$), $16 \times 16$ ($1.69 \times$), $8 \times 8$ ($3.38 \times$, poorest).
+
+Figure~\ref{fig:tile_comparison} highlights this as well and shows that $128 \times 128$ performs best on average. Small tiles ($8 \times 8$) exhibit very high execution times in comparison to other tile sizes.
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{|l|c|c|c|}
+\hline
+\textbf{Tile Size} & \textbf{A: 4p×3t (12 cores)} & \textbf{B: 4p×12t (48 cores)} & \textbf{C: 4p×24t (96 cores)} \\
+\hline
+\multirow{2}{*}{\textbf{8×8}} & 118.52s & 61.76s & 61.80s \\
+& (1.54×) & (3.04×) & (5.55×) \\
+\hline
+\multirow{2}{*}{\textbf{16×16}} & 91.39s & 37.00s & 22.83s \\
+& (1.19×) & (1.82×) & (2.05×) \\
+\hline
+\multirow{2}{*}{\textbf{32×32}} & 78.90s & 23.64s & 16.52s \\
+& (1.03×) & (1.16×) & (1.48×) \\
+\hline
+\multirow{2}{*}{\textbf{64×64}} & 76.91s & 21.81s & 11.46s \\
+& (baseline) & (1.07×) & (1.03×) \\
+\hline
+\multirow{2}{*}{\textbf{128×128}} & 78.30s & 20.33s & 11.13s \\
+& (1.02×) & (baseline) & (baseline) \\
+\hline
+\multirow{2}{*}{\textbf{256×256}} & 88.21s & 22.83s & 11.53s \\
+& (1.15×) & (1.12×) & (1.04×) \\
+\hline
+\end{tabular}
+\caption{Execution times (seconds) and overhead ratios for tile sizes across configurations. Each tile size row shows execution time and overhead ratio. Baseline indicates the optimal tile size for each configuration.}
+\label{tab:tile_results}
+\end{table}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.95\textwidth, height=0.25\textheight]{results/tile_benchmark_comparison.png}
+\caption{Execution time for each tile size across hybrid configurations (4p$\times$3t: 12 cores, 4p$\times$12t: 48 cores, 4p$\times$24t: 96 cores).}
+\label{fig:tile_comparison}
+\end{figure}
+
+\newpage
+
+Tile size selection has a big impact on execution time, particularly at high thread counts. Configuration C (4p×24t, 96 cores) shows performance varies from 61.80s with 8×8 tiles to 11.13s with 128×128 tiles—a $5.55 \times$ difference. This is driven by synchronization overhead: small tiles create many parallel regions where threads compete at barriers.
+
+Figure~\ref{fig:hybrid_comparison} and Figure~\ref{fig:hybrid_speedup} present additional scaling analysis for hybrid configurations with fixed thread and process counts. While speedup metrics appear favorable at smaller tile sizes for fixed processes, absolute execution times reveals that $64 \times 64$ and $128 \times 128$ tiles consistently deliver superior performance with execution times under 10 seconds at 96 cores. Smaller tiles, despite higher relative speedup values, require 20--30 seconds. This demonstrates that speedup ratios alone are misleading.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.95\textwidth, height=0.267\textheight]{results/hybrid_scaling_comparison.png}
+\caption{Execution time for hybrid MPI+OpenMP with fixed thread and process counts.}
+\label{fig:hybrid_comparison}
+\end{figure}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.95\textwidth, height=0.267\textheight]{results/hybrid_scaling_speedup.png}
+\caption{Speedup for hybrid MPI+OpenMP with fixed thread and process counts.}
+\label{fig:hybrid_speedup}
+\end{figure}
+
+Compared to the pure MPI baseline from Exercise 2 ($\sim 8$ seconds at 96 cores), the fixed 4-process hybrid configuration with 24 threads achieves 11.13 seconds at best. This suggests that hybrid parallelism with a small process count and many threads per process introduces synchronization overhead that outweighs benefits. The performance degradation is most severe with small tiles: the 8×8 tile configuration requires 61.80 seconds. 
+
+Small tile sizes ($8 \times 8$) create thousands of small parallel regions within each process, forcing frequent OpenMP thread synchronizations at barriers. Each barrier becomes a global bottleneck where all threads must wait, and with 24 threads contending at these barriers, synchronization cost dominates computation. Performance analysis reveals that 25.1\% of execution time is spent in MPI calls, with 99.5\% of that time in point-to-point communication at very low transfer rates, indicating load imbalance is causing synchronization overhead across processes. Larger tiles ($128 \times 128$) reduce synchronization frequency. Additionally, larger tiles exhibit better cache locality: a $128 \times 128$ tile fits within L3 cache, enabling efficient data reuse. Small tiles suffer poor cache utilization, causing repeated memory access to the same data across different threads.
+
+While the hybrid MPI+OpenMP approach with $128 \times 128$ tiles and 4 processes achieves 11.13 seconds at 96 cores, additional testing of alternative configurations reveals further optimization is possible. Testing with varying process counts and fixed thread counts of 8 and 12 threads demonstrates:
+
+\begin{itemize}
+\item 8 Processes × 12 Threads (96 cores, 64×64 tiles): 9.64 seconds  
+\item 12 Processes × 8 Threads (96 cores, 128×128 tiles): 8.46 seconds
+\end{itemize}
+
+Most significantly, the pure MPI dynamic tile decomposition approach, documented in exercise 2 as achieving $\sim 8$ seconds with 96 processes, matches these optimized configurations. This indicates that dynamic task scheduling and tile distribution are more critical than hybrid parallelism for achieving optimal performance with respect to the tested application
+
+ To ensure output image correctness despite parallel execution and different tile decompositions, each run writes the output image to a .ppm file. Verification of the output files consisted of two checks: ppm header validation confirming correct magic number, image dimensions and color depth and  visual inspection of the rendered output to confirm absence of rendering artifactss. All configurations passed both checks, confirming that the parallelization strategy preserves correctness across all tile sizes and process-thread configurations.
+
+\newpage
+
+\section{Conclusions}
+
+Tile decomposition is the primary optimization factor regarding the snowman ray tracing application. The following key findings can be summarized:
+
+\begin{enumerate}
+\item \textbf{Tile Size Trade-off}: The hybrid MPI+OpenMP approach favors larger tiles (128×128 or 64x64) to minimize synchronization overhead, with smaller tiles (8x8) the performance drops drastically.
+
+\item \textbf{OpenMP Limitations}: Thread-level parallelism introduces barrier synchronization overhead and reduces cache locality for small tiles. With many threads competing at barriers, synchronization cost dominates computation.
+
+\item \textbf{Process Count Optimization}: Using more MPI processes (8--12 for 96 cores) approaches the performance of $\sim 8$ seconds established by pure MPI.
+
+\item \textbf{Load Balancing Dominates}: Dynamic scheduling of small tiles via MPI has a bigger effect than thread-level parallelism for heterogeneous workloads like snowman rendering.
+\end{enumerate}
+
+\end{document}
