@@ -2,8 +2,8 @@
 #SBATCH --job-name=vampir_hybrid_test
 #SBATCH --account=tmp_hpca_workshop
 #SBATCH --nodes=1
-#SBATCH --ntasks-per-node=24
-#SBATCH --cpus-per-task=4
+#SBATCH --ntasks-per-node=96
+#SBATCH --cpus-per-task=1
 #SBATCH --time=00:30:00
 #SBATCH --partition=intelsr_devel
 #SBATCH --output=vampir_hybrid_test_%j.out
@@ -23,10 +23,10 @@ module load Score-P/8.4-gompi-2024a-CUDA-12.6.0
 # module load intel-compilers/2023.2.1
 # module load impi/2021.10.0-intel-compilers-2023.2.1
 
-# --- OpenMP settings ---
-export OMP_PROC_BIND=close
-export OMP_PLACES=cores
-export OMP_NUM_THREADS=4
+# # --- OpenMP settings ---
+# export OMP_PROC_BIND=close
+# export OMP_PLACES=cores
+# export OMP_NUM_THREADS=4
 
 # --- Intel MPI Process Pinning settings (commented out for GCC/OpenMPI) ---
 # export I_MPI_PIN=on
@@ -36,12 +36,12 @@ export OMP_NUM_THREADS=4
 # export I_MPI_PIN_DOMAIN=omp
 # export I_MPI_PIN_ORDER=compact
 
-processes=24
+processes=96
 
 # --- Score-P settings ---
 export SCOREP_ENABLE_TRACING=1
 export SCOREP_TOTAL_MEMORY=2G
-export SCOREP_EXPERIMENT_DIRECTORY=scorep_traces_hybrid/vampir_hybrid_p_${processes}_t_${OMP_NUM_THREADS}
+export SCOREP_EXPERIMENT_DIRECTORY=scorep_traces_original/test_p_${processes}
 export SCOREP_FILTERING_FILE=scorep.filt
 
 # --- Build ---
@@ -49,6 +49,6 @@ export SCOREP_FILTERING_FILE=scorep.filt
 make clean
 make
 
-# --- Run with Score-P tracing (24 MPI processes × 4 OpenMP threads = 96 total threads) ---
+# --- Run with Score-P tracing (96 MPI processes × 4 OpenMP threads = 384 total threads) ---
 # OpenMPI binding for hybrid MPI+OpenMP
-mpirun -np ${processes} --map-by ppr:24:node:PE=${OMP_NUM_THREADS} --bind-to core --report-bindings ./snowman 1024 4 16
+mpirun -n $processes ./snowman 1024 4 

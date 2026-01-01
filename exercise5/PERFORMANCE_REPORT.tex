@@ -1,0 +1,180 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{amsmath}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{multirow}
+\usepackage{hyperref}
+
+\graphicspath{{./}{original_implementation/screenshots/}{hybrid_implementation/screenshots/}}
+
+\lstset{
+    basicstyle=\ttfamily\small,
+    breaklines=true,
+    keywordstyle=\color{blue},
+    commentstyle=\color{gray},
+    stringstyle=\color{red},
+    showstringspaces=false
+}
+
+\title{Exercise 5: Profiling and Tracing the Snowman Ray Tracer\\Original vs. Hybrid Renderer}
+\author{David Peitz}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\section{Scope and Goals}
+
+This report profiles and generates traces for the original (non-hybrid) and hybrid Snowman renderer using the tools discussed in the lab: Linaro MAP (sample-based profiling), Score-P (instrumentation + tracing) and Vampir (trace visualization). The main goals are:
+
+\begin{itemize}
+\item Identify the most expensive functions/regions.
+\item Identify bottlenecks (e.g., synchronization, load imbalance, communication).
+\item Compare original vs. hybrid execution while keeping the same total number of workers.
+\end{itemize}
+
+\section{Experimental Setup}
+
+\subsection{Software and Tools}
+\begin{itemize}
+\item OpenMPI 4.1.6 (GCC 13.2.0 toolchain)
+\item Linaro Forge / MAP 25.0.3
+\item Score-P 8.4 (tracing + filtering)
+\item Vampir (timeline visualization)
+\end{itemize}
+
+\subsection{Workload and Configurations}
+
+The workload is the Snowman scene rendering with image size $1024\times 1024$ and 4 snowmen.
+
+To ensure a fair comparison, both implementations are compared using the same total number of workers:
+\begin{itemize}
+\item \textbf{Original:} 96 MPI ranks $\times$ 1 thread $=96$ workers.
+\item \textbf{Hybrid:} 24 MPI ranks $\times$ 4 OpenMP threads $=96$ workers.
+\end{itemize}
+
+Additionally, the original implementation is profiled at 48 MPI ranks to illustrate how the bottleneck changes when reducing the MPI rank count.
+
+\paragraph{Why 24 MPI ranks $\times$ 4 threads?}
+When increasing the number of threads while keeping the process count small (e.g., 4 MPI ranks), tiles such as $16\times 16$ or $64\times 64$ must be parallelized across many threads per process, which increases OpenMP scheduling and barrier overhead. By fixing the thread count at 4 and increasing the number of MPI ranks, the OpenMP parallelization of the pixel loop within a tile becomes more natural and efficient.
+
+\section{Linaro MAP Profiling Results}
+
+This section summarizes MAP's sampling-based profiling for the original and hybrid implementations.
+
+\subsection{Original Implementation (48 and 96 MPI ranks)}
+
+MAP's profiling summary indicates a strong shift towards MPI overhead as the number of MPI ranks increases.
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{lrr}
+\toprule
+\textbf{Configuration} & \textbf{Compute} & \textbf{MPI} \\
+\midrule
+Original (48 MPI ranks) & 62.3\% (14.2s) & 37.7\% (8.6s) \\
+Original (96 MPI ranks) & 15.1\% (7.1s)  & 84.9\% (40.1s) \\
+\bottomrule
+\end{tabular}
+\caption{MAP summary for the original implementation (time between MPI\_Init and MPI\_Finalize).}
+\label{tab:map_original_summary}
+\end{table}
+
+The 96-rank run is dominated by MPI time. The ``Accumulated Exclusive Time per Function'' view highlights that most exclusive time is accounted to MPI collectives and MPI management (notably \texttt{MPI\_Finalize}, \texttt{MPI\_Init}, \texttt{MPI\_Reduce}, and \texttt{MPI\_Gatherv}).
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.95\textwidth]{accumulated_time_per_function_p_96.png}
+\caption{Original implementation (96 MPI ranks): accumulated exclusive time per function.}
+\label{fig:map_original_accum}
+\end{figure}
+
+A key interpretation detail is that accumulated time is summed over all ranks. For example, a large accumulated \texttt{MPI\_Finalize} time indicates that many ranks spend a non-trivial amount of time blocked in finalize, which is commonly caused by global synchronization and waiting for stragglers.
+
+The program's own printed metrics for the 96-rank configuration report a large spread of local computation times (max $\approx 47.1$s vs. min $\approx 6.1$s), which is strong evidence of \textbf{load imbalance}. The fast ranks reach the final collectives and finalize early and wait for the slowest ranks.
+
+\subsection{Hybrid Implementation (24 MPI ranks $\times$ 4 threads)}
+
+For the hybrid configuration, MAP attributes the majority of time to the OpenMP-parallelized pixel loop inside the ray tracing kernel. In the ``Accumulated Exclusive Time per Function'' view the hottest region corresponds to the OpenMP loop (shown as \texttt{\$omp for @raytracer.cpp:325}), while MPI calls such as \texttt{MPI\_Recv} contribute comparatively little.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.95\textwidth]{accumulated_time_per_function_p_24.png}
+\caption{Hybrid implementation (24 MPI ranks $\times$ 4 threads): accumulated exclusive time per function.}
+\label{fig:map_hybrid_accum}
+\end{figure}
+
+This is consistent with the intended design: MPI is used for distributing tiles/results, while most wall time is spent in the compute-heavy per-pixel ray traversal and intersection tests.
+
+\paragraph{Line-level hotspot (sampling)}
+MAP is a sampling profiler: the most frequently sampled source location typically indicates where CPU time is spent. In this case, the sampling hotspot aligns with the OpenMP-parallelized pixel loop in the ray tracer (the loop annotated as \texttt{\$omp for @raytracer.cpp:325}), matching the expectation that the pixel work dominates compute time.
+
+\section{Score-P Tracing and Vampir Visualization}
+
+Score-P tracing provides a time-resolved view of execution that helps distinguish compute from synchronization and communication.
+
+\subsection{Original Implementation: MPI-dominated timelines}
+
+The Vampir timelines for the original implementation show large contiguous regions of MPI management/collectives, with long phases where ranks are not executing user computation. This is consistent with the MAP summary at 96 MPI ranks (MPI 84.9\%). The master timeline highlights long-running collectives such as \texttt{MPI\_Gatherv} and long time in \texttt{MPI\_Finalize}, indicating that the end of the program is dominated by synchronization and waiting.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.95\textwidth]{summary_timeline_p_96.png}
+\caption{Original implementation (96 MPI ranks): Vampir summary timeline.}
+\label{fig:vampir_original_summary}
+\end{figure}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.95\textwidth]{master_timeline_p_96.png}
+\caption{Original implementation (96 MPI ranks): Vampir master timeline.}
+\label{fig:vampir_original_master}
+\end{figure}
+
+\subsection{Hybrid Implementation: compute-dominated timelines}
+
+For the hybrid renderer, the Vampir timelines show that the main phase is dominated by the OpenMP compute region (pixel loop), and MPI accounts for only a small fraction of runtime. The timeline shows near-continuous OpenMP activity across threads during the compute phase, which matches the MAP result identifying the OpenMP loop as the hottest region.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.95\textwidth]{summary_timeline_p_24.png}
+\caption{Hybrid implementation (24 MPI ranks $\times$ 4 threads): Vampir summary timeline.}
+\label{fig:vampir_hybrid_summary}
+\end{figure}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.95\textwidth]{master_timeline_p_24.png}
+\caption{Hybrid implementation (24 MPI ranks $\times$ 4 threads): Vampir master timeline.}
+\label{fig:vampir_hybrid_master}
+\end{figure}
+
+\section{Comparative Analysis: Original vs. Hybrid}
+
+\paragraph{Original (96 ranks): bottleneck is synchronization/imbalance.}
+At 96 MPI ranks, profiling and tracing consistently indicate that MPI dominates runtime. The observed spread in per-rank compute times implies substantial load imbalance, which manifests as long waiting phases in collectives and finalize. As a result, adding more MPI ranks does not translate into higher throughput for this configuration.
+
+\paragraph{Hybrid (24$\times$4): bottleneck is pixel computation.}
+The hybrid configuration shifts the bottleneck back to the compute kernel: the OpenMP-parallel pixel loop dominates both MAP and Vampir views, while MPI time is relatively small. This indicates that the hybrid design reduces global MPI synchronization overhead (for the same total worker count) and uses shared-memory parallelism effectively within tiles.
+
+\paragraph{Most expensive regions/functions (high-level).}
+\begin{itemize}
+\item \textbf{Original:} MPI collectives/management (\texttt{MPI\_Finalize}, \texttt{MPI\_Gatherv}, \texttt{MPI\_Reduce}).
+\item \textbf{Hybrid:} OpenMP pixel loop in the ray tracer (\texttt{\$omp for @raytracer.cpp:325}).
+\end{itemize}
+
+\section{Conclusions}
+
+\begin{enumerate}
+\item Increasing the MPI rank count for the original renderer (48 $\rightarrow$ 96) shifts the runtime towards MPI overhead, and timelines indicate waiting in collectives/finalize, consistent with load imbalance.
+\item The hybrid configuration with 24 MPI ranks and 4 OpenMP threads (96 workers total) makes the pixel computation the dominant cost again, with MPI overhead comparatively small.
+\item The combined MAP + Score-P/Vampir workflow is effective: MAP identifies hotspots (functions/lines), while Vampir timelines explain whether time is spent computing or waiting.
+\end{enumerate}
+
+\end{document}

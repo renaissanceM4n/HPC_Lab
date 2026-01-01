@@ -1,8 +1,12 @@
-# Compiler and flags for Intel Compiler with Intel MPI
-CXX = mpiicpx
-CXXFLAGS = -O3 -std=c++17 -qopenmp -xHost
+# Compiler and flags for GCC with OpenMPI and Score-P
+CXX = scorep --instrument-filter=scorep.filt mpic++
+CXXFLAGS = -O3 -std=c++17 -fopenmp
 
-# Intel MPI Process Pinning (default settings)
+# Intel MPI Compiler (commented out, switch back if needed)
+# CXX = scorep --instrument-filter=scorep.filt mpiicpx
+# CXXFLAGS = -O3 -std=c++17 -qopenmp -xHost
+
+# Intel MPI Process Pinning (commented out)
 #MPIFLAGS = -I_MPI_PIN=on -I_MPI_PIN_RESPECT_CPUSET=on -I_MPI_PIN_RESPECT_HCA=on \
            -I_MPI_PIN_CELL=unit -I_MPI_PIN_DOMAIN=auto:compact -I_MPI_PIN_ORDER=bunch
 

@@ -79,74 +79,60 @@ int main(int argc, char* argv[]) {
         }
 
         int num_tiles = (int)tiles.size();
+        std::vector<unsigned char> full_buf(image_size * image_size * 3);
 
         if (rank == 0) {
-            // Master: coordinate work and gather results
-            std::vector<unsigned char> full_buf(image_size * image_size * 3);
-
+            // Master: coordinate work and gather results (NO compute)
             int next_tile = 0;
-            // send initial tiles to workers
+            
+            // Send initial tiles to workers
             for (int worker = 1; worker < size; ++worker) {
                 if (next_tile < num_tiles) {
                     int meta[5] = {tiles[next_tile].id, tiles[next_tile].x0, tiles[next_tile].y0, tiles[next_tile].w, tiles[next_tile].h};
                     MPI_Send(meta, 5, MPI_INT, worker, 1, MPI_COMM_WORLD);
                     ++next_tile;
                 } else {
-                    MPI_Send(nullptr, 0, MPI_INT, worker, 2, MPI_COMM_WORLD); // done
+                    MPI_Send(nullptr, 0, MPI_INT, worker, 2, MPI_COMM_WORLD);
                 }
             }
 
             int tiles_received = 0;
             while (tiles_received < num_tiles) {
                 MPI_Status status;
-                int flag = 0;
-                
-                // Non-blocking probe for available results
-                MPI_Iprobe(MPI_ANY_SOURCE, 4, MPI_COMM_WORLD, &flag, &status);
-                
-                if (flag) {
-                    // Tile result is available, receive it
-                    int header[3]; // tile_id, w, h
-                    MPI_Recv(header, 3, MPI_INT, status.MPI_SOURCE, 4, MPI_COMM_WORLD, &status);
-                    int src = status.MPI_SOURCE;
-                    int tile_id = header[0];
-                    int w = header[1];
-                    int h = header[2];
-                    int bufsize = w * h * 3;
-                    std::vector<unsigned char> buf(bufsize);
-                    MPI_Recv(buf.data(), bufsize, MPI_UNSIGNED_CHAR, src, 5, MPI_COMM_WORLD, &status);
-                    // receive elapsed time for this tile
-                    double elapsed = 0.0;
-                    MPI_Recv(&elapsed, 1, MPI_DOUBLE, src, 6, MPI_COMM_WORLD, &status);
+                int header[3];
+                MPI_Recv(header, 3, MPI_INT, MPI_ANY_SOURCE, 4, MPI_COMM_WORLD, &status);
+                int src = status.MPI_SOURCE;
+                int tile_id = header[0];
+                int w = header[1];
+                int h = header[2];
+                int bufsize = w * h * 3;
+                std::vector<unsigned char> buf(bufsize);
+                MPI_Recv(buf.data(), bufsize, MPI_UNSIGNED_CHAR, src, 5, MPI_COMM_WORLD, &status);
+                double elapsed = 0.0;
+                MPI_Recv(&elapsed, 1, MPI_DOUBLE, src, 6, MPI_COMM_WORLD, &status);
 
-                    // place buffer into full_buf at correct offset
-                    Tile t = tiles[tile_id];
-                    for (int row = 0; row < t.h; ++row) {
-                        int dest_row = t.y0 + row;
-                        int dest_off = (dest_row * image_size + t.x0) * 3;
-                        int src_off = row * t.w * 3;
-                        std::memcpy(&full_buf[dest_off], &buf[src_off], t.w * 3);
-                    }
+                // Place buffer into full_buf at correct offset
+                Tile t = tiles[tile_id];
+                for (int row = 0; row < t.h; ++row) {
+                    int dest_row = t.y0 + row;
+                    int dest_off = (dest_row * image_size + t.x0) * 3;
+                    int src_off = row * t.w * 3;
+                    std::memcpy(&full_buf[dest_off], &buf[src_off], t.w * 3);
+                }
 
-                    ++tiles_received;
+                ++tiles_received;
 
-                    // send next tile to this worker or done
-                    if (next_tile < num_tiles) {
-                        int meta[5] = {tiles[next_tile].id, tiles[next_tile].x0, tiles[next_tile].y0, tiles[next_tile].w, tiles[next_tile].h};
-                        MPI_Send(meta, 5, MPI_INT, src, 1, MPI_COMM_WORLD);
-                        ++next_tile;
-                    } else {
-                        MPI_Send(nullptr, 0, MPI_INT, src, 2, MPI_COMM_WORLD);
-                    }
+                // Send next tile to this worker or done
+                if (next_tile < num_tiles) {
+                    int meta[5] = {tiles[next_tile].id, tiles[next_tile].x0, tiles[next_tile].y0, tiles[next_tile].w, tiles[next_tile].h};
+                    MPI_Send(meta, 5, MPI_INT, src, 1, MPI_COMM_WORLD);
+                    ++next_tile;
                 } else {
-                    // No tile result available yet - brief sleep to avoid busy-waiting
-                    std::this_thread::sleep_for(std::chrono::microseconds(10));
+                    MPI_Send(nullptr, 0, MPI_INT, src, 2, MPI_COMM_WORLD);
                 }
             }
 
-            // (master will compute standard MPI-reduced metrics after workers finish)
-
-            // all tiles received -> save image
+            // All tiles received -> save image
             std::vector<Color> full_pixels(image_size * image_size);
             for (int i = 0; i < image_size * image_size; ++i) {
                 full_pixels[i] = Color(full_buf[3*i], full_buf[3*i + 1], full_buf[3*i + 2]);
@@ -160,7 +146,7 @@ int main(int argc, char* argv[]) {
                 int meta[5];
                 MPI_Recv(meta, 5, MPI_INT, 0, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
                 if (status.MPI_TAG == 2) {
-                    break; // done
+                    break;
                 }
                 int tile_id = meta[0];
                 int x0 = meta[1];
@@ -175,7 +161,7 @@ int main(int argc, char* argv[]) {
                 double t1 = MPI_Wtime();
                 double elapsed = t1 - t0;
 
-                // convert to bytes
+                // Convert to bytes
                 int bufsize = w * h * 3;
                 std::vector<unsigned char> buf(bufsize);
                 for (int i = 0; i < w * h; ++i) {
@@ -189,11 +175,7 @@ int main(int argc, char* argv[]) {
                 MPI_Send(buf.data(), bufsize, MPI_UNSIGNED_CHAR, 0, 5, MPI_COMM_WORLD);
                 MPI_Send(&elapsed, 1, MPI_DOUBLE, 0, 6, MPI_COMM_WORLD);
 
-                // accumulate local compute time for this worker
                 local_compute_time += elapsed;
-
-                // lightweight instrumentation to stderr
-                // std::cerr << "Rank " << rank << " rendered tile " << tile_id << " (" << w << "x" << h << ") in " << elapsed << " s\n";
             }
         }
     }
