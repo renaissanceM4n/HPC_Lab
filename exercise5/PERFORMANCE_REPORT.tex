@@ -61,7 +61,11 @@ To ensure a fair comparison, both implementations are compared using the same to
 Additionally, the original implementation is profiled at 48 MPI ranks to illustrate how the bottleneck changes when reducing the MPI rank count.
 
 \paragraph{Why 24 MPI ranks $\times$ 4 threads?}
-When increasing the number of threads while keeping the process count small (e.g., 4 MPI ranks), tiles such as $16\times 16$ or $64\times 64$ must be parallelized across many threads per process, which increases OpenMP scheduling and barrier overhead. By fixing the thread count at 4 and increasing the number of MPI ranks, the OpenMP parallelization of the pixel loop within a tile becomes more natural and efficient.
+In the hybrid renderer, OpenMP parallelism is applied to the nested pixel loop over each tile. For a tile of size $T\times T$, the loop provides $T^2$ independent pixel iterations. If the number of OpenMP threads is increased while keeping the MPI process count small, the available parallel work per process can become too fine-grained.
+
+For example, for a $16\times 16$ tile there are $16^2 = 256$ pixel iterations. With 24 OpenMP threads, this yields only $256/24 \approx 10$--11 iterations per thread. In this regime, the per-thread work is too small to amortize OpenMP scheduling and synchronization costs (e.g., loop scheduling and implicit barriers), resulting in poor efficiency.
+
+Therefore, this report uses a fixed thread count of 4 and increases the number of MPI processes: when you fix the number of threads to 4 and increase the number of processes, more tiles are processed concurrently and each process performs a sufficiently large chunk of work. For the same $16\times 16$ example, 4 threads yield $256/4 = 64$ iterations per thread, which reduces OpenMP overhead and typically improves cache behavior due to more contiguous work per thread.
 
 \section{Linaro MAP Profiling Results}
 
@@ -111,6 +115,8 @@ For the hybrid configuration, MAP attributes the majority of time to the OpenMP-
 \end{figure}
 
 This is consistent with the intended design: MPI is used for distributing tiles/results, while most wall time is spent in the compute-heavy per-pixel ray traversal and intersection tests.
+
+The large cost of the OpenMP loop is explained directly by the computation performed per pixel in \texttt{RayTracer::renderTile()}. For each pixel, the code (i) computes a primary ray direction through the pixel, (ii) tests the ray against all spheres and all planes to find the closest intersection, (iii) evaluates shading including surface normal computation and shadow checks (casting a ``shadow ray'' and iterating over scene geometry to determine occlusion), and (iv) applies a snowflake overlay by iterating over a large set of snowflake points (\texttt{snowflake\_count = 75000}) and checking whether the ray passes sufficiently close to any snowflake. This combination results in a high arithmetic intensity and a high number of per-pixel loop iterations, which naturally dominates runtime when MPI overhead is reduced.
 
 \paragraph{Line-level hotspot (sampling)}
 MAP is a sampling profiler: the most frequently sampled source location typically indicates where CPU time is spent. In this case, the sampling hotspot aligns with the OpenMP-parallelized pixel loop in the ray tracer (the loop annotated as \texttt{\$omp for @raytracer.cpp:325}), matching the expectation that the pixel work dominates compute time.
