@@ -39,25 +39,16 @@ This report profiles and generates traces for the original and hybrid Snowman re
 
 \section{Experimental Setup}
 
-\subsection{Software and Tools}
+
+The workload is the Snowman scene rendering with image size $1024\times 1024$ and 4 snowmen. Both implementations were profiled across a comprehensive sweep of worker counts (8--96 workers, 23 configurations each), varying the number of MPI ranks and OpenMP threads systematically.
+
+For detailed analysis in this report, representative configurations were selected:
 \begin{itemize}
-\item OpenMPI 4.1.6 (GCC 13.2.0 toolchain)
-\item Linaro Forge / MAP 25.0.3
-\item Score-P 8.4 (tracing + filtering)
-\item Vampir (timeline visualization)
+\item \textbf{Original:} 8, 60, and 96 MPI ranks (pure MPI, 1 thread per rank)
+\item \textbf{Hybrid:} 2 MPI ranks $\times$ 4 threads (8 workers), 15 MPI ranks $\times$ 4 threads (60 workers), and 24 MPI ranks $\times$ 4 threads (96 workers)
 \end{itemize}
 
-\subsection{Workload and Configurations}
-
-The workload is the Snowman scene rendering with image size $1024\times 1024$ and 4 snowmen.
-
-To ensure a fair comparison, both implementations are compared using the same total number of workers:
-\begin{itemize}
-\item \textbf{Original:} 96 MPI ranks $\times$ 1 thread $=96$ workers.
-\item \textbf{Hybrid:} 24 MPI ranks $\times$ 4 OpenMP threads $=96$ workers.
-\end{itemize}
-
-Additionally, the original implementation is profiled at 60 MPI ranks (besides 96) to illustrate how the dominant cost shifts when reducing the MPI rank count.
+These configurations enable fair comparison at the same total worker count (8, 60, and 96 workers) while illustrating how the dominant cost shifts between MPI overhead and computation as the parallelization strategy and worker count change.
 
 In the hybrid renderer, OpenMP parallelism is applied to the nested pixel loop over each tile. For a tile of size $T\times T$, the loop provides $T^2$ independent pixel iterations. If the number of OpenMP threads is increased while keeping the MPI process count small, the available parallel work per process can become too fine-grained.
 
@@ -67,40 +58,39 @@ Therefore, this report uses a fixed thread count of 4 and increases the number o
 
 \subsection{Overview: Runtime Comparison}
 
-Both implementations were profiled across a range of worker counts (8--96 workers, 23 configurations each). Figure~\ref{fig:strong_scaling_comparison} shows the strong scaling behavior across all tested configurations, comparing the maximum per-rank computation time (the actual computational work).
+Figure~\ref{fig:strong_scaling_comparison} shows the strong scaling behavior across all tested configurations, comparing the maximum per-rank computation time (the actual computational work).
 
 \begin{figure}[h]
 \centering
 \includegraphics[width=0.75\textwidth]{map_strong_scaling_comparison.pdf}
-\caption{Strong scaling comparison: Original (pure MPI) vs. Hybrid (MPI+OpenMP) across 8--96 workers. The plot shows maximum local computation time per rank. The hybrid implementation maintains near-ideal scaling throughout, while the original implementation shows severe degradation beyond $\sim$60 workers due to MPI overhead.}
+\caption{Strong scaling comparison: Original (pure MPI) vs. Hybrid (MPI+OpenMP) across 8--96 workers. The plot shows maximum local computation time per rank.}
 \label{fig:strong_scaling_comparison}
 \end{figure}
 
-The strong scaling plot reveals a critical difference: the hybrid implementation scales nearly ideally up to 96 workers, with computation time decreasing monotonically. In contrast, the original implementation shows increasing computation time beyond approximately 60 workers, indicating that load imbalance and synchronization overhead prevent further speedup. At 96 workers, the hybrid version completes per-rank work in $\sim$8s compared to $\sim$48s for the original—a $6\times$ speedup in actual computation time.
+The strong scaling plot reveals a critical difference: the hybrid implementation scales nearly ideally up to 96 workers, with computation time decreasing monotonically. In contrast, the original implementation shows increasing computation time before and beyond approximately 60 workers, indicating that load imbalance and synchronization overhead prevent further speedup. At 96 workers, the hybrid version completes per-rank work in $\sim$8s compared to $\sim$48s for the original—a $6\times$ speedup in actual computation time.
+
+Notably, at very low worker counts (8 workers), the original implementation outperforms the hybrid version. This may be because the hybrid implementation's master/worker tile distribution protocol introduces MPI communication overhead that is not amortized by sufficient parallel work at such low process counts, whereas the original implementation's simple static row assignment minimizes coordination overhead.
 
 \section{Linaro MAP Profiling Results}
 
 This section summarizes MAP's sampling-based profiling for the original and hybrid implementations. Note that the following screenshots and analyses represent selected excerpts from a comprehensive profiling sweep (8--96 workers); the figures shown are illustrative examples chosen to highlight key behavioral differences between the two implementations.
 
-\subsection{Original Implementation (60 and 96 MPI ranks)}
+\subsection{Original Implementation}
 
-MAP's sampling highlights that the dominant cost depends strongly on the MPI rank count.
+MAP's sampling highlights that the dominant cost depends strongly on the MPI rank count. At low worker counts, the implementation is compute-dominated with minimal MPI overhead, while higher rank counts increasingly suffer from synchronization and load imbalance.
 
-\paragraph{Example 1: 96 MPI ranks --- \texttt{MPI\_Finalize()} dominates}
-At 96 ranks, the MAP source view shows that a large fraction of time is attributed to the line containing \texttt{MPI\_Finalize()}. This indicates that ranks spend substantial time inside the MPI library at shutdown, which typically means \textbf{waiting/synchronization} (e.g., stragglers reaching the end later than others).
+\paragraph{\textbf{Example 1:} 8 MPI ranks --- compute dominates (\texttt{render()})}
+At 8 ranks, MAP profiling shows that approximately 87\% of time is spent in \texttt{RayTracer::render(...)}, indicating strongly compute-dominated behavior (Figure~\ref{fig:map_original_render_8}). MPI overhead is minimal at this low rank count, with the simple static row assignment efficiently distributing work without significant coordination cost. This explains why the original implementation outperforms the hybrid version at such low worker counts.
 
 \begin{figure}[h]
 \centering
-\includegraphics[width=0.95\textwidth]{map_mpi_finalize_p_96.png}
-\caption{Original implementation (96 MPI ranks): \texttt{MPI\_Finalize()} dominates the sampled time. The line-level breakdown shows \emph{Calling functions} (time inside the called MPI routine), not \emph{Executing instructions} of user code.}
-\label{fig:map_original_finalize_96}
+\includegraphics[width=0.95\textwidth]{original_implementation/screenshots/linaroForge_map/map_main_p_8.png}
+\caption{Original implementation (8 MPI ranks): approximately 87\% of time is spent in \texttt{RayTracer::render(...)} (compute-dominated).}
+\label{fig:map_original_render_8}
 \end{figure}
 
-MAP distinguishes whether samples on a source line are spent in the machine instructions of that line (\emph{executing instructions}) or in code reached by calling a function from that line (\emph{calling functions}).
-For \texttt{MPI\_Finalize()}, the time is almost entirely classified as \emph{calling functions}, meaning the CPU time is spent inside the MPI runtime/library rather than executing user instructions on that source line. In practice, this usually corresponds to blocking behavior (global synchronization / waiting).
-
-\paragraph{Example 2: 60 MPI ranks --- compute dominates (\texttt{render()})}
-At 60 ranks, the MAP call site in \texttt{main()} identifies the call to \texttt{RayTracer::render(...)} as the dominant cost. The line-level breakdown is again primarily \emph{calling functions}, which is expected for a function call site: it means the time is spent inside \texttt{render()}, not in the call instruction itself.
+\paragraph{\textbf{Example 2:} 60 MPI ranks --- compute remains dominant (\texttt{render()})}
+At 60 ranks, the MAP call site in \texttt{main()} identifies the call to \texttt{RayTracer::render(...)} as the dominant cost (Figure~\ref{fig:map_original_render_60}). The line-level breakdown is again primarily \emph{calling functions}, which is expected for a function call site: it means the time is spent inside \texttt{render()}, not in the call instruction itself.
 
 \begin{figure}[h]
 \centering
@@ -109,10 +99,10 @@ At 60 ranks, the MAP call site in \texttt{main()} identifies the call to \texttt
 \label{fig:map_original_render_60}
 \end{figure}
 
-When drilling down into \texttt{render()}, MAP points to a hotspot inside the ray tracer kernel (pixel/geometry work). Here the breakdown is dominated by \emph{executing instructions}, i.e., the CPU is spending time executing the concrete instructions at that source location.
-This suggests that for 60 ranks, the limiting factor is the compute kernel itself (branch-heavy intersection logic and memory-access patterns) rather than MPI synchronization.
+When drilling down into \texttt{render()}, MAP points to a hotspot inside the ray tracer kernel (pixel/geometry work, Figure~\ref{fig:map_original_pixel_60}). Here the breakdown is dominated by \emph{executing instructions}, i.e., the CPU is spending time executing the concrete instructions at that source location.
+This suggests that for 60 ranks, the limiting factor is the compute kernel itself rather than MPI synchronization.
 
-The hotspot corresponds to the nested per-pixel ray tracing work (ray generation, intersection testing, and shading); a more detailed per-pixel breakdown is provided later for the hybrid kernel (\texttt{RayTracer::renderTile()}).
+The hotspot corresponds to the nested per-pixel ray tracing work of ray generation, intersection testing and shading; a more detailed per-pixel breakdown is provided later for the hybrid kernel (\texttt{RayTracer::renderTile()}).
 
 \begin{figure}[h]
 \centering
@@ -121,16 +111,37 @@ The hotspot corresponds to the nested per-pixel ray tracing work (ray generation
 \label{fig:map_original_pixel_60}
 \end{figure}
 
-\subsection{Hybrid Implementation (24 MPI ranks $\times$ 4 threads)}
-
-In contrast to the original implementation, MAP does not indicate MPI-dominated behavior for the hybrid renderer at either 96 workers (24 MPI ranks $\times$ 4 threads) or 60 workers (15 MPI ranks $\times$ 4 threads). Instead, the dominant cost is the compute phase in \texttt{RayTracer::renderTile(...)}.
+\paragraph{\textbf{Example 3:} 96 MPI ranks --- \texttt{MPI\_Finalize()} dominates}
+At 96 ranks, the MAP source view shows that a large fraction of time is attributed to the line containing \texttt{MPI\_Finalize()} (Figure~\ref{fig:map_original_finalize_96}). This indicates that ranks spend substantial time inside the MPI library at shutdown, which typically means waiting/synchronization.
 
 \begin{figure}[h]
 \centering
-\includegraphics[width=0.95\textwidth]{map_renderTile_p_24.png}
-\caption{Hybrid implementation (24 MPI ranks $\times$ 4 threads, 96 workers): MAP attributes most time to the call into \texttt{RayTracer::renderTile(...)} (compute phase).}
-\label{fig:map_hybrid_renderTile_96workers}
+\includegraphics[width=0.95\textwidth]{map_mpi_finalize_p_96.png}
+\caption{Original implementation (96 MPI ranks): \texttt{MPI\_Finalize()} dominates the sampled time.}
+\label{fig:map_original_finalize_96}
 \end{figure}
+
+MAP distinguishes whether samples on a source line are spent in the machine instructions of that line (\emph{executing instructions}) or in code reached by calling a function from that line (\emph{calling functions}).
+For \texttt{MPI\_Finalize()}, the time is almost entirely classified as \emph{calling functions}, meaning the CPU time is spent inside the MPI runtime/library rather than executing user instructions on that source line.
+
+\subsection{Hybrid Implementation (24 MPI ranks $\times$ 4 threads)}
+
+In contrast to the original implementation, MAP does not indicate MPI-dominated behavior for the hybrid renderer at the tested worker counts above 15 workers. Instead, the dominant cost is consistently the compute phase in \texttt{RayTracer::renderTile(...)}. However, at very low worker counts, the master/worker coordination overhead becomes significant.
+
+\paragraph{\textbf{Example 1:} 8 workers (2 MPI ranks $\times$ 4 threads) --- MPI dominates (\texttt{MPI\_Recv()})}
+At 8 workers (2 processes $\times$ 4 threads), MAP profiling reveals a starkly different pattern compared to higher worker counts. Approximately 36.7\% of total time is spent in \texttt{MPI\_Recv()} at line 103 of \texttt{main.cpp} (Figure~\ref{fig:map_hybrid_mpi_recv_8}). This indicates that the master/worker coordination protocol introduces significant overhead when there is effectively only one worker process (recall: one rank is the master).
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.95\textwidth]{hybrid_implementation/screenshots/linaroForge_map/map_main_p_2.png}
+\caption{Hybrid implementation (2 MPI ranks $\times$ 4 threads, 8 workers): approximately 36.7\% of time is spent in \texttt{MPI\_Recv()} at line 103 (coordination overhead dominates).}
+\label{fig:map_hybrid_mpi_recv_8}
+\end{figure}
+
+With only one worker process handling all compute tasks, the master spends substantial time waiting for results, while the single worker must sequentially process all tiles. This serialization eliminates the load-balancing advantage of the hybrid approach and exposes the overhead of the work distribution protocol. This explains why the original implementation (with its simple static row assignment) outperforms the hybrid version at such low process counts: the coordination overhead outweighs any benefits from dynamic tile distribution.
+
+\paragraph{\textbf{Example 2:} 60 workers (15 MPI ranks $\times$ 4 threads) --- compute remains dominant}
+At 60 workers, the compute phase in \texttt{RayTracer::renderTile(...)} remains dominant (Figure~\ref{fig:map_hybrid_renderTile_60workers}), with no shift towards MPI dominance. This is consistent with the intended design: MPI is used for distributing tiles/results, while most wall time is spent in the compute-heavy per-pixel ray traversal and intersection tests.
 
 \begin{figure}[h]
 \centering
@@ -139,12 +150,20 @@ In contrast to the original implementation, MAP does not indicate MPI-dominated 
 \label{fig:map_hybrid_renderTile_60workers}
 \end{figure}
 
-This is consistent with the intended design: MPI is used for distributing tiles/results, while most wall time is spent in the compute-heavy per-pixel ray traversal and intersection tests.
+\paragraph{\textbf{Example 3:} 96 workers (24 MPI ranks $\times$ 4 threads) --- compute dominates (\texttt{renderTile()})}
+At 96 workers, MAP attributes most time to the call into \texttt{RayTracer::renderTile(...)} (Figure~\ref{fig:map_hybrid_renderTile_96workers}). The line-level breakdown is primarily \emph{calling functions}, indicating that time is spent inside the \texttt{renderTile()} function body rather than in the call instruction itself.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.95\textwidth]{map_renderTile_p_24.png}
+\caption{Hybrid implementation (24 MPI ranks $\times$ 4 threads, 96 workers): MAP attributes most time to the call into \texttt{RayTracer::renderTile(...)} (compute phase).}
+\label{fig:map_hybrid_renderTile_96workers}
+\end{figure}
 
 The large cost of the OpenMP loop is explained directly by the computation performed per pixel in \texttt{RayTracer::renderTile()}. For each pixel, the code (i) computes a primary ray direction through the pixel, (ii) tests the ray against all spheres and all planes to find the closest intersection, (iii) evaluates shading including surface normal computation and shadow checks (casting a ``shadow ray'' and iterating over scene geometry to determine occlusion), and (iv) applies a snowflake overlay by iterating over a large set of snowflake points (\texttt{snowflake\_count = 75000}) and checking whether the ray passes sufficiently close to any snowflake. This combination results in a high arithmetic intensity and a high number of per-pixel loop iterations, which naturally dominates runtime when MPI overhead is reduced.
 
 \paragraph{Line-level hotspot (sampling)}
-MAP is a sampling profiler: the most frequently sampled source location typically indicates where CPU time is spent. In this case, the sampling hotspot aligns with the OpenMP-parallelized pixel loop in the ray tracer (the loop annotated as \texttt{\$omp for @raytracer.cpp:325}), matching the expectation that the pixel work dominates compute time.
+MAP is a sampling profiler: the most frequently sampled source location typically indicates where CPU time is spent. In this case, the sampling hotspot aligns with the OpenMP-parallelized pixel loop in the ray tracer (the loop annotated as \texttt{\$omp for @raytracer.cpp:325}, Figure~\ref{fig:map_hybrid_pixel_loop}), matching the expectation that the pixel work dominates compute time.
 
 \begin{figure}[h]
 \centering
@@ -159,9 +178,9 @@ Score-P tracing provides a time-resolved view of execution that helps distinguis
 
 \subsection{Original Implementation: MPI-dominated timelines}
 
-The Vampir timelines for the original implementation show large contiguous regions of MPI management/collectives, with long phases where ranks are not executing user computation. This is consistent with the MAP finding at 96 MPI ranks that \texttt{MPI\_Finalize()} dominates: the end of the program is dominated by synchronization and waiting.
+The Vampir timelines for the original implementation show large contiguous regions of MPI management/collectives, with long phases where ranks are not executing user computation (Figures~\ref{fig:vampir_original_summary} and~\ref{fig:vampir_original_master}). This is consistent with the MAP finding at 96 MPI ranks that \texttt{MPI\_Finalize()} dominates: the end of the program is dominated by synchronization and waiting.
 
-In addition, Vampir's ``Accumulated Exclusive Time per Function'' view clearly highlights that \texttt{MPI\_Finalize} is the largest contributor, followed by \texttt{MPI\_Init} and collectives such as \texttt{MPI\_Reduce} and \texttt{MPI\_Gatherv}. Note that these accumulated values are summed over all ranks; a large accumulated value therefore typically indicates many ranks spending a non-trivial amount of time inside that MPI routine (often blocked).
+In addition, Vampir's ``Accumulated Exclusive Time per Function'' view (Figure~\ref{fig:vampir_original_accum}) clearly highlights that \texttt{MPI\_Finalize} is the largest contributor, followed by \texttt{MPI\_Init} and collectives such as \texttt{MPI\_Reduce} and \texttt{MPI\_Gatherv}. Note that these accumulated values are summed over all ranks; a large accumulated value therefore typically indicates many ranks spending a non-trivial amount of time inside that MPI routine (often blocked).
 
 \begin{figure}[h]
 \centering
@@ -184,7 +203,7 @@ In addition, Vampir's ``Accumulated Exclusive Time per Function'' view clearly h
 \label{fig:vampir_original_master}
 \end{figure}
 
-The timeline is consistent with a two-part end phase: a long collective communication step and then long time in MPI shutdown. The master-thread inspection shows long contiguous intervals for \texttt{MPI\_Gatherv} and \texttt{MPI\_Finalize} (both on the order of $\sim 38$s in the provided view), which strongly suggests that the program is not limited by per-rank compute at the end, but by global synchronization/tail effects (e.g., waiting for slow ranks before finalization completes).
+The timeline is consistent with a two-part end phase: a long collective communication step and then long time in MPI shutdown. The master-thread inspection (Figures~\ref{fig:vampir_original_master_detail_gatherv} and~\ref{fig:vampir_original_worker_detail_finalize}) shows long contiguous intervals for \texttt{MPI\_Gatherv} and \texttt{MPI\_Finalize} (both on the order of $\sim 38$s in the provided view), which strongly suggests that the program is not limited by per-rank compute at the end, but by global synchronization/tail effects (e.g., waiting for slow ranks before finalization completes).
 
 \begin{figure}[h]
 \centering
@@ -202,7 +221,7 @@ The timeline is consistent with a two-part end phase: a long collective communic
 
 \subsection{Hybrid Implementation: compute-dominated timelines}
 
-For the hybrid renderer, the Vampir timelines show that the main phase is dominated by the OpenMP compute region (pixel loop), and MPI accounts for only a small fraction of runtime. The timeline shows near-continuous OpenMP activity across threads during the compute phase, which matches the MAP result identifying the OpenMP loop as the hottest region.
+For the hybrid renderer, the Vampir timelines (Figures~\ref{fig:vampir_hybrid_accum},~\ref{fig:vampir_hybrid_summary}, and~\ref{fig:vampir_hybrid_master}) show that the main phase is dominated by the OpenMP compute region (pixel loop), and MPI accounts for only a small fraction of runtime. The timeline shows near-continuous OpenMP activity across threads during the compute phase, which matches the MAP result identifying the OpenMP loop as the hottest region.
 
 \begin{figure}[h]
 \centering
@@ -227,8 +246,11 @@ For the hybrid renderer, the Vampir timelines show that the main phase is domina
 
 \section{Comparative Analysis: Original vs. Hybrid}
 
+\paragraph{Low worker counts (8 workers): original outperforms hybrid.}
+At 8 workers, the original implementation (8 MPI ranks) is compute-dominated (87\% in \texttt{render()}), while the hybrid version (2 MPI ranks $\times$ 4 threads) suffers from coordination overhead (36.7\% in \texttt{MPI\_Recv}).
+
 \paragraph{Original (96 ranks): bottleneck is synchronization/imbalance.}
-At 96 MPI ranks, profiling and tracing consistently indicate that MPI dominates runtime. The observed spread in per-rank compute times implies substantial load imbalance, which manifests as long waiting phases in collectives and finalize. As a result, adding more MPI ranks does not translate into higher throughput for this configuration.
+At 96 MPI ranks, profiling and tracing consistently indicate that MPI dominates runtime. The observed spread in per-rank compute times (visible in the strong scaling plot, Figure~\ref{fig:strong_scaling_comparison}) implies substantial load imbalance, which manifests as long waiting phases in collectives and finalize. As a result, adding more MPI ranks does not translate into higher throughput for this configuration.
 
 \paragraph{Hybrid (24$\times$4): bottleneck is pixel computation.}
 The hybrid configuration shifts the bottleneck back to the compute kernel: the OpenMP-parallel pixel loop dominates both MAP and Vampir views, while MPI time is relatively small. This indicates that the hybrid design reduces global MPI synchronization overhead (for the same total worker count) and uses shared-memory parallelism effectively within tiles.
@@ -239,12 +261,33 @@ The hybrid configuration shifts the bottleneck back to the compute kernel: the O
 \item \textbf{Hybrid:} OpenMP pixel loop in the ray tracer (\texttt{\$omp for @raytracer.cpp:325}).
 \end{itemize}
 
+\section{Optimization Opportunities}
+
+Based on the profiling results, several potential optimization opportunities can be identified for both the original and hybrid implementations. The following optimizations have not been implemented in the profiled versions but represent promising directions for future performance improvements. They address both communication bottlenecks (primarily relevant for the original pure-MPI version) and computational hotspots (relevant for both versions).
+
+\paragraph{Communication and load balancing (primarily original implementation).}
+
+\textbf{Dynamic scheduling with on-demand tile distribution.} The static row assignment in the original implementation (\texttt{main.cpp}) leads to severe load imbalance, as evidenced by the $\sim$7$\times$ difference between maximum and minimum per-rank computation times (Figure~\ref{fig:strong_scaling_comparison}). A master/worker protocol could address this: workers would request new tiles (small rectangular image regions) after completing their current work, rather than receiving a fixed row assignment at startup. The master process coordinates work distribution using non-blocking message probes (\texttt{MPI\_Iprobe}) to avoid serialization bottlenecks. This would eliminate the long waiting phases in \texttt{MPI\_Gatherv}/\texttt{MPI\_Finalize} shown in Figures~\ref{fig:vampir_original_summary} and~\ref{fig:vampir_original_master}, as faster ranks would no longer idle waiting for slower ranks to complete their disproportionately expensive static assignments. \emph{Expected impact:} improved strong scaling at higher process counts by balancing workload dynamically; primarily affects communication/synchronization time.
+
+\textbf{Communication pattern optimization.} The original implementation uses \texttt{MPI\_Gatherv} for result collection, which requires $O(n^2)$ total data movement when all ranks communicate their results. Additionally, the current code performs redundant conversions between \texttt{std::vector<Color>} and temporary flat byte buffers. Replacing the collective gather with direct point-to-point sends to a master process (as already done in the hybrid version) would reduce communication complexity to $O(n)$ and eliminate the conversion overhead. \emph{Expected impact:} reduced communication time and memory overhead, particularly noticeable at higher process counts.
+
+\paragraph{Compute kernels (both implementations).}
+
+\textbf{Snowflake overlay pruning via spatial partitioning.} The inner loop over \texttt{snowflake\_count=75000} in \texttt{raytracer.cpp} (lines $\sim$244--266 for original, $\sim$443--462 for hybrid) represents the dominant computational bottleneck. Currently, \emph{every pixel tests every single snowflake} for intersection, resulting in $1024^2 \times 75000 \approx 78$ billion intersection tests per frame. However, most of these tests are unnecessary: a snowflake at the top-left corner of the screen will never be visible to a ray cast through the bottom-right pixel, yet the current implementation tests it anyway.
+
+A spatial partitioning scheme using pixel-space bounding boxes could dramatically reduce this cost. For each snowflake (modeled as a small sphere), projective geometry can derive the rectangular pixel region where that snowflake could possibly appear on screen. During rendering, each pixel would then only test snowflakes whose bounding boxes overlap that pixel's position---typically reducing the number of candidates from 75{,}000 to a handful (often fewer than 10). Additional pruning can reject snowflakes outside the camera frustum or beyond the maximum render distance using simple distance bounds.
+
+The implementation would involve a preprocessing phase (cost: $O(\text{snowflake\_count})$) to compute bounding boxes and organize snowflakes into a row-indexed data structure, followed by $O(k)$ tests per pixel where $k \ll 75000$ is the number of nearby snowflakes. \emph{Expected impact:} potentially orders-of-magnitude reduction in per-pixel computation time, as profiling suggests $>99\%$ of compute time is currently spent in this loop; primarily affects computation, not communication.
+
+\textbf{Sphere intersection optimization.} Once snowflake overhead is reduced, \texttt{intersect\_sphere(...)} (the ray-sphere intersection routine in \texttt{raytracer.cpp}, lines $\sim$28--60) would become the next computational hotspot. Several algebraic and architectural optimizations are possible: (i) exploit that ray directions are normalized to simplify the quadratic formula (use $pq$-formula instead of $abc$-formula, eliminating divisions); (ii) reorder conditional branches to reduce data dependency chains and improve branch prediction; (iii) apply the same bounding box technique to scene geometry (though less effective for the shadow ray case where the ray origin varies per pixel); (iv) explicit SIMD vectorization with a data layout transformation (Array-of-Structures $\rightarrow$ Struct-of-Arrays) to test multiple spheres in parallel. \emph{Expected impact:} reduced compute time in primary and shadow ray intersection tests; primarily computation-bound.
+
 \section{Conclusions}
 
 \begin{enumerate}
-\item Increasing the MPI rank count for the original renderer (60 $\rightarrow$ 96) shifts the runtime towards MPI overhead, and timelines indicate waiting in collectives/finalize, consistent with load imbalance.
-\item The hybrid configuration with 24 MPI ranks and 4 OpenMP threads (96 workers total) makes the pixel computation the dominant cost again, with MPI overhead comparatively small.
-\item The combined MAP + Score-P/Vampir workflow is effective: MAP identifies hotspots (functions/lines), while Vampir timelines explain whether time is spent computing or waiting.
+\item Across the tested configurations (8--96 workers, 23 configurations per implementation), the implementations exhibit distinct scaling characteristics. At very low worker counts (8 workers), the original implementation outperforms the hybrid version due to lower coordination overhead. However, beyond $\sim$15 workers, the original implementation exhibits severe scaling degradation due to load imbalance. At 96 MPI ranks, MAP/Vampir profiling reveals that ranks spend substantial time waiting in collectives and finalize, with per-rank compute times varying by a factor of $\sim$7 (Figure~\ref{fig:strong_scaling_comparison}).
+\item The hybrid configurations maintain near-ideal strong scaling from approximately 15 to 96 workers. The crossover point occurs because at low process counts (e.g., 2 MPI ranks), the master/worker protocol introduces significant overhead (36.7\% time in \texttt{MPI\_Recv}), while at higher counts the coordination cost is amortized across many workers. At 96 workers (24 MPI ranks $\times$ 4 threads), the hybrid version achieves a $6\times$ speedup in per-rank computation time compared to the original, shifting the bottleneck back to the compute kernel.
+\item The dominant computational hotspot in both implementations is the snowflake overlay loop inside the per-pixel kernel (\texttt{raytracer.cpp}), which iterates over 75{,}000 snowflake candidates per pixel. Profiling suggests this accounts for $>99\%$ of compute time once MPI overhead is reduced. Geometric culling (bounding boxes) offers the highest optimization potential.
+\item The MAP + Score-P/Vampir workflow is effective: MAP identifies hotspots (functions/lines and time attribution), while Vampir timelines distinguish compute from synchronization phases and reveal load imbalance patterns.
 \end{enumerate}
 
 \end{document}
