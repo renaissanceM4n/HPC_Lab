@@ -103,6 +103,8 @@ At 60 ranks, the MAP call site in \texttt{main()} identifies the call to \texttt
 When drilling down into \texttt{render()}, MAP points to a hotspot inside the ray tracer kernel (pixel/geometry work). Here the breakdown is dominated by \emph{executing instructions}, i.e., the CPU is spending time executing the concrete instructions at that source location.
 This suggests that for 60 ranks, the limiting factor is the compute kernel itself (branch-heavy intersection logic and memory-access patterns) rather than MPI synchronization.
 
+The hotspot corresponds to the nested per-pixel ray tracing work (ray generation, intersection testing, and shading); a more detailed per-pixel breakdown is provided later for the hybrid kernel (\texttt{RayTracer::renderTile()}).
+
 \begin{figure}[h]
 \centering
 \includegraphics[width=0.95\textwidth]{map_pixel_loop_p_60.png}
