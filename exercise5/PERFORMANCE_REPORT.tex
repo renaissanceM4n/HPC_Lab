@@ -9,7 +9,7 @@
 \usepackage{multirow}
 \usepackage{hyperref}
 
-\graphicspath{{./}{original_implementation/screenshots/}{hybrid_implementation/screenshots/}}
+\graphicspath{{./}{original_implementation/screenshots/}{original_implementation/screenshots/linaroForge_map/}{original_implementation/screenshots/vampir/}{hybrid_implementation/screenshots/}}
 
 \lstset{
     basicstyle=\ttfamily\small,
@@ -30,7 +30,7 @@
 
 \section{Scope and Goals}
 
-This report profiles and generates traces for the original (non-hybrid) and hybrid Snowman renderer using the tools discussed in the lab: Linaro MAP (sample-based profiling), Score-P (instrumentation + tracing) and Vampir (trace visualization). The main goals are:
+This report profiles and generates traces for the original (non-hybrid) and hybrid Snowman renderer using the tools discussed in the lab. The analysis is structured to first use Linaro MAP (sample-based profiling) to find hotspots, and then use Score-P (instrumentation + tracing) with Vampir (trace visualization) to explain time-resolved behavior. The main goals are:
 
 \begin{itemize}
 \item Identify the most expensive functions/regions.
@@ -58,7 +58,7 @@ To ensure a fair comparison, both implementations are compared using the same to
 \item \textbf{Hybrid:} 24 MPI ranks $\times$ 4 OpenMP threads $=96$ workers.
 \end{itemize}
 
-Additionally, the original implementation is profiled at 48 MPI ranks to illustrate how the bottleneck changes when reducing the MPI rank count.
+Additionally, the original implementation is profiled at 60 MPI ranks (besides 96) to illustrate how the dominant cost shifts when reducing the MPI rank count.
 
 \paragraph{Why 24 MPI ranks $\times$ 4 threads?}
 In the hybrid renderer, OpenMP parallelism is applied to the nested pixel loop over each tile. For a tile of size $T\times T$, the loop provides $T^2$ independent pixel iterations. If the number of OpenMP threads is increased while keeping the MPI process count small, the available parallel work per process can become too fine-grained.
@@ -71,37 +71,44 @@ Therefore, this report uses a fixed thread count of 4 and increases the number o
 
 This section summarizes MAP's sampling-based profiling for the original and hybrid implementations.
 
-\subsection{Original Implementation (48 and 96 MPI ranks)}
+\subsection{Original Implementation (60 and 96 MPI ranks)}
 
-MAP's profiling summary indicates a strong shift towards MPI overhead as the number of MPI ranks increases.
+MAP's sampling highlights that the dominant cost depends strongly on the MPI rank count.
 
-\begin{table}[h]
-\centering
-\small
-\begin{tabular}{lrr}
-\toprule
-\textbf{Configuration} & \textbf{Compute} & \textbf{MPI} \\
-\midrule
-Original (48 MPI ranks) & 62.3\% (14.2s) & 37.7\% (8.6s) \\
-Original (96 MPI ranks) & 15.1\% (7.1s)  & 84.9\% (40.1s) \\
-\bottomrule
-\end{tabular}
-\caption{MAP summary for the original implementation (time between MPI\_Init and MPI\_Finalize).}
-\label{tab:map_original_summary}
-\end{table}
-
-The 96-rank run is dominated by MPI time. The ``Accumulated Exclusive Time per Function'' view highlights that most exclusive time is accounted to MPI collectives and MPI management (notably \texttt{MPI\_Finalize}, \texttt{MPI\_Init}, \texttt{MPI\_Reduce}, and \texttt{MPI\_Gatherv}).
+\paragraph{Example 1: 96 MPI ranks --- \texttt{MPI\_Finalize()} dominates}
+At 96 ranks, the MAP source view shows that a large fraction of time is attributed to the line containing \texttt{MPI\_Finalize()}. This indicates that ranks spend substantial time inside the MPI library at shutdown, which typically means \textbf{waiting/synchronization} (e.g., stragglers reaching the end later than others).
 
 \begin{figure}[h]
 \centering
-\includegraphics[width=0.95\textwidth]{accumulated_time_per_function_p_96.png}
-\caption{Original implementation (96 MPI ranks): accumulated exclusive time per function.}
-\label{fig:map_original_accum}
+\includegraphics[width=0.95\textwidth]{map_mpi_finalize_p_96.png}
+\caption{Original implementation (96 MPI ranks): \texttt{MPI\_Finalize()} dominates the sampled time. The line-level breakdown shows \emph{Calling functions} (time inside the called MPI routine), not \emph{Executing instructions} of user code.}
+\label{fig:map_original_finalize_96}
 \end{figure}
 
-A key interpretation detail is that accumulated time is summed over all ranks. For example, a large accumulated \texttt{MPI\_Finalize} time indicates that many ranks spend a non-trivial amount of time blocked in finalize, which is commonly caused by global synchronization and waiting for stragglers.
+\paragraph{Calling functions vs. executing instructions}
+MAP distinguishes whether samples on a source line are spent in the machine instructions of that line (\emph{executing instructions}) or in code reached by calling a function from that line (\emph{calling functions}).
+For \texttt{MPI\_Finalize()}, the time is almost entirely classified as \emph{calling functions}, meaning the CPU time is spent inside the MPI runtime/library rather than executing user instructions on that source line. In practice, this usually corresponds to blocking behavior (global synchronization / waiting).
 
-The program's own printed metrics for the 96-rank configuration report a large spread of local computation times (max $\approx 47.1$s vs. min $\approx 6.1$s), which is strong evidence of \textbf{load imbalance}. The fast ranks reach the final collectives and finalize early and wait for the slowest ranks.
+\paragraph{Example 2: 60 MPI ranks --- compute dominates (\texttt{render()})}
+At 60 ranks, the MAP call site in \texttt{main()} identifies the call to \texttt{RayTracer::render(...)} as the dominant cost. The line-level breakdown is again primarily \emph{calling functions}, which is expected for a function call site: it means the time is spent inside \texttt{render()}, not in the call instruction itself.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.95\textwidth]{map_render_p_60.png}
+\caption{Original implementation (60 MPI ranks): the main cost is the call to \texttt{RayTracer::render(...)} (compute-heavy phase).}
+\label{fig:map_original_render_60}
+\end{figure}
+
+\paragraph{Drill-down into the compute kernel}
+When drilling down into \texttt{render()}, MAP points to a hotspot inside the ray tracer kernel (pixel/geometry work). Here the breakdown is dominated by \emph{executing instructions}, i.e., the CPU is spending time executing the concrete instructions at that source location.
+This suggests that for 60 ranks, the limiting factor is the compute kernel itself (branch-heavy intersection logic and memory-access patterns) rather than MPI synchronization.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.95\textwidth]{map_pixel_loop_p_60.png}
+\caption{Original implementation (60 MPI ranks): inside the ray tracer kernel the hotspot is dominated by \emph{executing instructions}, indicating instruction-level work (branches/memory accesses) rather than call/wait overhead.}
+\label{fig:map_original_pixel_60}
+\end{figure}
 
 \subsection{Hybrid Implementation (24 MPI ranks $\times$ 4 threads)}
 
@@ -127,7 +134,16 @@ Score-P tracing provides a time-resolved view of execution that helps distinguis
 
 \subsection{Original Implementation: MPI-dominated timelines}
 
-The Vampir timelines for the original implementation show large contiguous regions of MPI management/collectives, with long phases where ranks are not executing user computation. This is consistent with the MAP summary at 96 MPI ranks (MPI 84.9\%). The master timeline highlights long-running collectives such as \texttt{MPI\_Gatherv} and long time in \texttt{MPI\_Finalize}, indicating that the end of the program is dominated by synchronization and waiting.
+The Vampir timelines for the original implementation show large contiguous regions of MPI management/collectives, with long phases where ranks are not executing user computation. This is consistent with the MAP finding at 96 MPI ranks that \texttt{MPI\_Finalize()} dominates: the end of the program is dominated by synchronization and waiting.
+
+In addition, Vampir's ``Accumulated Exclusive Time per Function'' view clearly highlights that \texttt{MPI\_Finalize} is the largest contributor, followed by \texttt{MPI\_Init} and collectives such as \texttt{MPI\_Reduce} and \texttt{MPI\_Gatherv}. Note that these accumulated values are summed over all ranks; a large accumulated value therefore typically indicates many ranks spending a non-trivial amount of time inside that MPI routine (often blocked).
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.95\textwidth]{accumulated_time_per_function_p_96.png}
+\caption{Original implementation (96 MPI ranks): accumulated exclusive time per function (summed over ranks). \texttt{MPI\_Finalize} dominates.}
+\label{fig:vampir_original_accum}
+\end{figure}
 
 \begin{figure}[h]
 \centering
@@ -141,6 +157,22 @@ The Vampir timelines for the original implementation show large contiguous regio
 \includegraphics[width=0.95\textwidth]{master_timeline_p_96.png}
 \caption{Original implementation (96 MPI ranks): Vampir master timeline.}
 \label{fig:vampir_original_master}
+\end{figure}
+
+The timeline is consistent with a two-part end phase: a long collective communication step and then long time in MPI shutdown. The master-thread inspection shows long contiguous intervals for \texttt{MPI\_Gatherv} and \texttt{MPI\_Finalize} (both on the order of $\sim 38$s in the provided view), which strongly suggests that the program is not limited by per-rank compute at the end, but by global synchronization/tail effects (e.g., waiting for slow ranks before finalization completes).
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.95\textwidth]{master_timeline_description_master_thread_p_96.png}
+\caption{Original implementation (96 MPI ranks): master-thread detail view showing a long \texttt{MPI\_Gatherv} interval.}
+\label{fig:vampir_original_master_detail_gatherv}
+\end{figure}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.95\textwidth]{master_timeline_description_worker_thread_p_96.png}
+\caption{Original implementation (96 MPI ranks): worker-thread detail view showing a long \texttt{MPI\_Finalize} interval.}
+\label{fig:vampir_original_worker_detail_finalize}
 \end{figure}
 
 \subsection{Hybrid Implementation: compute-dominated timelines}
@@ -178,7 +210,7 @@ The hybrid configuration shifts the bottleneck back to the compute kernel: the O
 \section{Conclusions}
 
 \begin{enumerate}
-\item Increasing the MPI rank count for the original renderer (48 $\rightarrow$ 96) shifts the runtime towards MPI overhead, and timelines indicate waiting in collectives/finalize, consistent with load imbalance.
+\item Increasing the MPI rank count for the original renderer (60 $\rightarrow$ 96) shifts the runtime towards MPI overhead, and timelines indicate waiting in collectives/finalize, consistent with load imbalance.
 \item The hybrid configuration with 24 MPI ranks and 4 OpenMP threads (96 workers total) makes the pixel computation the dominant cost again, with MPI overhead comparatively small.
 \item The combined MAP + Score-P/Vampir workflow is effective: MAP identifies hotspots (functions/lines), while Vampir timelines explain whether time is spent computing or waiting.
 \end{enumerate}
