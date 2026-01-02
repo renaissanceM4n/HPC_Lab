@@ -6,9 +6,12 @@
 #SBATCH --cpus-per-task=1
 #SBATCH --time=00:30:00
 #SBATCH --partition=intelsr_devel
-#SBATCH --output=map_original_test_%j.out
-#SBATCH --error=map_original_test_%j.err
+#SBATCH --output=map_log/map_original_test_%j.out
+#SBATCH --error=map_log/map_original_test_%j.err
 #SBATCH --exclusive
+
+# --- Create log directory ---
+mkdir -p map_log
 
 # --- Environment setup ---
 unset SLURM_EXPORT_ENV
@@ -35,8 +38,10 @@ echo "Building the executable..."
 make clean
 make
 
-# --- Run with Map profiling (96 MPI processes) ---
-echo "Running map test with profiling (96 processes)..."
-map --profile mpirun -n 96 ./snowman 1024 4
+# --- Run with Map profiling (8, 12, 16, 20, ..., 96 MPI processes) ---
+for ((cores=8; cores<=96; cores+=4)); do
+  echo "Running map test with profiling (${cores} processes)..."
+  map --profile mpirun -n ${cores} ./snowman 1024 4
+done
 
 echo "Map profiling test completed!"

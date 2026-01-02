@@ -1,6 +1,7 @@
 # Compiler and flags for GCC with OpenMPI and Score-P
-CXX = scorep --instrument-filter=scorep.filt mpic++
-CXXFLAGS = -O3 -std=c++17 -fopenmp
+CXX = mpic++
+CXXFLAGS = -O3 -std=c++17 -fopenmp -g
+# scorep --instrument-filter=scorep.filt 
 
 # Intel MPI Compiler (commented out, switch back if needed)
 # CXX = scorep --instrument-filter=scorep.filt mpiicpx

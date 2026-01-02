@@ -20,9 +20,9 @@
 #include <random>
 #include <cmath>
 #include <omp.h>
-#include <scorep/SCOREP_User.h>
+// #include <scorep/SCOREP_User.h>
 
-SCOREP_USER_REGION_DEFINE(pixel_work_handle)
+// SCOREP_USER_REGION_DEFINE(pixel_work_handle)
 
 
 RayTracer::RayTracer(int w, int h) : width(w), height(h), scene(nullptr) {}
@@ -272,7 +272,7 @@ void RayTracer::render(int rank, int size, std::vector<Color>& out_pixels) {
 }
 
 void RayTracer::renderTile(int x0, int y0, int w, int h, unsigned int seed, std::vector<Color>& out) {
-    SCOREP_USER_REGION("renderTile", SCOREP_USER_REGION_TYPE_FUNCTION);
+    // SCOREP_USER_REGION("renderTile", SCOREP_USER_REGION_TYPE_FUNCTION);
     if (!scene) {
         return;
     }
@@ -325,7 +325,7 @@ void RayTracer::renderTile(int x0, int y0, int w, int h, unsigned int seed, std:
     #pragma omp parallel for collapse(2)
     for (int ty = 0; ty < h; ++ty) {
         for (int tx = 0; tx < w; ++tx) {
-            SCOREP_USER_REGION_BEGIN(pixel_work_handle, "pixel_work", SCOREP_USER_REGION_TYPE_COMMON);
+            // SCOREP_USER_REGION_BEGIN(pixel_work_handle, "pixel_work", SCOREP_USER_REGION_TYPE_COMMON);
             
             int y = y0 + ty;
             int x = x0 + tx;
@@ -459,7 +459,7 @@ void RayTracer::renderTile(int x0, int y0, int w, int h, unsigned int seed, std:
 
             out[ty * w + tx] = pixel_color;
             
-            SCOREP_USER_REGION_END(pixel_work_handle);
+            // SCOREP_USER_REGION_END(pixel_work_handle);
         }
     }
 }
